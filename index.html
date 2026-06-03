@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0b6e99">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>LocTag — Localização de equipamentos</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="header">
+    <div class="header-text">
+      <h1>LocTag</h1>
+      <p class="subtitle">Localização de equipamentos · Piloto</p>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="search-bar">
+      <label for="search-input" class="visually-hidden">Buscar equipamento</label>
+      <input
+        type="search"
+        id="search-input"
+        placeholder="Buscar tag, descrição ou sistema..."
+        autocomplete="off"
+        enterkeyhint="search"
+      >
+      <button type="button" id="clear-btn" class="btn-secondary">Limpar</button>
+    </section>
+
+    <article id="selection-detail" class="selection-detail hidden" aria-live="polite">
+      <div class="selection-detail-inner">
+        <span class="selection-tag" id="detail-tag"></span>
+        <span class="selection-desc" id="detail-desc"></span>
+        <dl class="selection-meta">
+          <div><dt>Sistema</dt><dd id="detail-sistema"></dd></div>
+          <div><dt>Deck</dt><dd id="detail-deck"></dd></div>
+          <div><dt>Área</dt><dd id="detail-area"></dd></div>
+        </dl>
+      </div>
+    </article>
+
+    <nav class="main-tabs" role="tablist" aria-label="Seções principais">
+      <button type="button" role="tab" id="tab-lista" class="main-tab is-active" aria-selected="true" aria-controls="panel-lista" data-panel="lista">
+        Lista
+        <span id="result-count" class="tab-badge"></span>
+      </button>
+      <button type="button" role="tab" id="tab-mapa" class="main-tab" aria-selected="false" aria-controls="panel-mapa" data-panel="mapa">
+        Mapa
+      </button>
+    </nav>
+
+    <div class="content-grid">
+      <section id="panel-lista" class="table-panel panel-tab is-active" role="tabpanel" aria-labelledby="tab-lista">
+        <h2 class="panel-title panel-title-desktop">Resultados</h2>
+        <div id="tags-cards" class="tags-cards" aria-label="Lista de equipamentos"></div>
+        <div class="table-wrap table-wrap-desktop">
+          <table id="tags-table">
+            <thead>
+              <tr>
+                <th>Tag</th>
+                <th>Descrição</th>
+                <th>Sistema</th>
+                <th>Deck</th>
+                <th>Área</th>
+              </tr>
+            </thead>
+            <tbody id="tags-tbody"></tbody>
+          </table>
+          <p id="empty-state" class="empty-state hidden">Nenhuma tag encontrada.</p>
+        </div>
+      </section>
+
+      <section id="panel-mapa" class="views-panel panel-tab" role="tabpanel" aria-labelledby="tab-mapa" hidden>
+        <nav class="view-tabs" role="tablist" aria-label="Tipo de vista">
+          <button type="button" role="tab" id="view-tab-planta" class="view-tab is-active" aria-selected="true" data-view="planta">Planta</button>
+          <button type="button" role="tab" id="view-tab-lateral" class="view-tab" aria-selected="false" data-view="lateral">Lateral</button>
+        </nav>
+
+        <div class="view-block view-pane is-active" data-view-pane="planta">
+          <h2 class="panel-title panel-title-desktop">Vista em planta</h2>
+          <div class="svg-wrap">
+            <svg id="svg-planta" viewBox="0 0 1000 500" xmlns="http://www.w3.org/2000/svg" aria-label="Vista em planta">
+              <image href="assets/planta.svg" x="0" y="0" width="1000" height="500" preserveAspectRatio="xMidYMid meet"/>
+              <g id="markers-planta" class="markers-layer"></g>
+            </svg>
+          </div>
+        </div>
+        <div class="view-block view-pane" data-view-pane="lateral" hidden>
+          <h2 class="panel-title panel-title-desktop">Vista lateral</h2>
+          <div class="svg-wrap">
+            <svg id="svg-lateral" viewBox="0 0 1000 500" xmlns="http://www.w3.org/2000/svg" aria-label="Vista lateral">
+              <image href="assets/lateral.svg" x="0" y="0" width="1000" height="500" preserveAspectRatio="xMidYMid meet"/>
+              <g id="markers-lateral" class="markers-layer"></g>
+            </svg>
+          </div>
+        </div>
+        <p class="map-hint">Toque em um equipamento na lista para ver a localização.</p>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>Dados de demonstração · esquemas genéricos FPSO</p>
+  </footer>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 500" width="1000" height="500">
+  <rect width="1000" height="500" fill="#dce3ea"/>
+  <text x="500" y="45" font-family="system-ui,sans-serif" font-size="16" font-weight="600" fill="#0b6e99" text-anchor="middle">VISTA LATERAL  FPSO (esquemático)</text>
+  <path d="M 80 380 L 120 320 L 880 320 L 920 380 L 920 400 L 80 400 Z" fill="#b8c5d4" stroke="#4a5f7a" stroke-width="2"/>
+  <rect x="80" y="300" width="840" height="20" fill="#9aabb8" stroke="#4a5f7a" stroke-width="1"/>
+  <text x="95" y="315" font-family="system-ui,sans-serif" font-size="11" fill="#1f2933">M03</text>
+  <rect x="80" y="340" width="840" height="25" fill="#a8b8c8" stroke="#4a5f7a" stroke-width="1"/>
+  <text x="95" y="358" font-family="system-ui,sans-serif" font-size="11" fill="#1f2933">M02</text>
+  <rect x="80" y="365" width="840" height="30" fill="#b8c5d4" stroke="#4a5f7a" stroke-width="1"/>
+  <text x="95" y="385" font-family="system-ui,sans-serif" font-size="11" fill="#1f2933">M01</text>
+  <line x1="80" y1="400" x2="920" y2="400" stroke="#4a5f7a" stroke-width="2"/>
+  <text x="95" y="430" font-family="system-ui,sans-serif" font-size="12" font-weight="600" fill="#1f2933">Linha d'água</text>
+  <text x="95" y="95" font-family="system-ui,sans-serif" font-size="13" font-weight="600" fill="#1f2933">Proa</text>
+  <text x="870" y="95" font-family="system-ui,sans-serif" font-size="13" font-weight="600" fill="#1f2933">Popa</text>
+  <rect x="200" y="180" width="120" height="90" fill="none" stroke="#6b7f96" stroke-width="1" stroke-dasharray="6 3" rx="2"/>
+  <rect x="450" y="160" width="140" height="110" fill="none" stroke="#6b7f96" stroke-width="1" stroke-dasharray="6 3" rx="2"/>
+  <rect x="700" y="140" width="130" height="130" fill="none" stroke="#6b7f96" stroke-width="1" stroke-dasharray="6 3" rx="2"/>
+  <text x="95" y="270" font-family="system-ui,sans-serif" font-size="10" fill="#8b9aab">Cota ‘</text>
+  <line x1="70" y1="200" x2="70" y2="400" stroke="#8b9aab" stroke-width="1"/>
+  <line x1="65" y1="200" x2="75" y2="200" stroke="#8b9aab" stroke-width="1"/>
+  <line x1="65" y1="400" x2="75" y2="400" stroke="#8b9aab" stroke-width="1"/>
+</svg>

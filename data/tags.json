@@ -1,0 +1,137 @@
+[
+  {
+    "tag": "P-101A",
+    "descricao": "Bomba de drenagem",
+    "sistema": "Processo",
+    "deck": "M01",
+    "area": "Módulo 3",
+    "planta": { "x": 420, "y": 280 },
+    "lateral": { "x": 420, "z": 380 }
+  },
+  {
+    "tag": "P-102B",
+    "descricao": "Bomba de transferência",
+    "sistema": "Processo",
+    "deck": "M01",
+    "area": "Módulo 2",
+    "planta": { "x": 310, "y": 240 },
+    "lateral": { "x": 310, "z": 380 }
+  },
+  {
+    "tag": "V-201",
+    "descricao": "Separador trifásico",
+    "sistema": "Processo",
+    "deck": "M02",
+    "area": "Módulo 4",
+    "planta": { "x": 580, "y": 260 },
+    "lateral": { "x": 580, "z": 320 }
+  },
+  {
+    "tag": "E-301",
+    "descricao": "Trocador de calor",
+    "sistema": "Processo",
+    "deck": "M02",
+    "area": "Módulo 5",
+    "planta": { "x": 720, "y": 300 },
+    "lateral": { "x": 720, "z": 320 }
+  },
+  {
+    "tag": "K-401",
+    "descricao": "Compressor de gás",
+    "sistema": "Processo",
+    "deck": "M03",
+    "area": "Módulo 6",
+    "planta": { "x": 650, "y": 180 },
+    "lateral": { "x": 650, "z": 260 }
+  },
+  {
+    "tag": "PU-501",
+    "descricao": "Bomba de água de mar",
+    "sistema": "Utilidades",
+    "deck": "M01",
+    "area": "Módulo 1",
+    "planta": { "x": 180, "y": 320 },
+    "lateral": { "x": 180, "z": 380 }
+  },
+  {
+    "tag": "PU-502",
+    "descricao": "Bomba de água potável",
+    "sistema": "Utilidades",
+    "deck": "M02",
+    "area": "Módulo 1",
+    "planta": { "x": 220, "y": 200 },
+    "lateral": { "x": 220, "z": 320 }
+  },
+  {
+    "tag": "FG-601",
+    "descricao": "Detector de gás fixo",
+    "sistema": "Segurança",
+    "deck": "M02",
+    "area": "Módulo 4",
+    "planta": { "x": 540, "y": 220 },
+    "lateral": { "x": 540, "z": 320 }
+  },
+  {
+    "tag": "SDV-701",
+    "descricao": "Válvula de bloqueio de emergência",
+    "sistema": "Segurança",
+    "deck": "M01",
+    "area": "Módulo 5",
+    "planta": { "x": 760, "y": 340 },
+    "lateral": { "x": 760, "z": 380 }
+  },
+  {
+    "tag": "MCC-801",
+    "descricao": "Centro de controle de motores",
+    "sistema": "Elétrica",
+    "deck": "M01",
+    "area": "Sala elétrica",
+    "planta": { "x": 120, "y": 160 },
+    "lateral": { "x": 120, "z": 380 }
+  },
+  {
+    "tag": "TR-802",
+    "descricao": "Transformador principal",
+    "sistema": "Elétrica",
+    "deck": "M02",
+    "area": "Sala elétrica",
+    "planta": { "x": 140, "y": 380 },
+    "lateral": { "x": 140, "z": 320 }
+  },
+  {
+    "tag": "FT-901",
+    "descricao": "Medidor de vazão",
+    "sistema": "Instrumentação",
+    "deck": "M02",
+    "area": "Módulo 3",
+    "planta": { "x": 450, "y": 300 },
+    "lateral": { "x": 450, "z": 320 }
+  },
+  {
+    "tag": "PT-902",
+    "descricao": "Transmissor de pressão",
+    "sistema": "Instrumentação",
+    "deck": "M03",
+    "area": "Módulo 6",
+    "planta": { "x": 680, "y": 220 },
+    "lateral": { "x": 680, "z": 260 }
+  },
+  {
+    "tag": "LT-903",
+    "descricao": "Transmissor de nível",
+    "sistema": "Instrumentação",
+    "deck": "M02",
+    "area": "Módulo 4",
+    "planta": { "x": 600, "y": 290 },
+    "lateral": { "x": 600, "z": 320 }
+  },
+  {
+    "tag": "HV-1001",
+    "descricao": "Válvula de alívio",
+    "sistema": "Segurança",
+    "deck": "M03",
+    "area": "Topo do módulo 6",
+    "planta": { "x": 820, "y": 200 },
+    "lateral": { "x": 820, "z": 200 }
+  }
+]
