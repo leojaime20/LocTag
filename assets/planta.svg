@@ -1,22 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 500" width="1000" height="500">
   <defs>
     <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
-      <path d="M 50 0 L 0 0 0 50" fill="none" stroke="#c5cdd6" stroke-width="0.5" opacity="0.6"/>
+      <path d="M 50 0 L 0 0 0 50" fill="none" stroke="rgba(0,133,66,0.2)" stroke-width="0.5"/>
     </pattern>
   </defs>
-  <rect width="1000" height="500" fill="#dce3ea"/>
+  <rect width="1000" height="500" fill="#0a1812"/>
   <rect x="80" y="100" width="840" height="300" fill="url(#grid)"/>
-  <rect x="80" y="100" width="840" height="300" fill="none" stroke="#4a5f7a" stroke-width="3" rx="4"/>
-  <line x1="280" y1="100" x2="280" y2="400" stroke="#6b7f96" stroke-width="1.5" stroke-dasharray="8 4"/>
-  <line x1="480" y1="100" x2="480" y2="400" stroke="#6b7f96" stroke-width="1.5" stroke-dasharray="8 4"/>
-  <line x1="680" y1="100" x2="680" y2="400" stroke="#6b7f96" stroke-width="1.5" stroke-dasharray="8 4"/>
-  <text x="180" y="255" font-family="system-ui,sans-serif" font-size="14" fill="#5c6b7a" text-anchor="middle">Mód. 1</text>
-  <text x="380" y="255" font-family="system-ui,sans-serif" font-size="14" fill="#5c6b7a" text-anchor="middle">Mód. 23</text>
-  <text x="580" y="255" font-family="system-ui,sans-serif" font-size="14" fill="#5c6b7a" text-anchor="middle">Mód. 45</text>
-  <text x="780" y="255" font-family="system-ui,sans-serif" font-size="14" fill="#5c6b7a" text-anchor="middle">Mód. 6</text>
-  <text x="95" y="90" font-family="system-ui,sans-serif" font-size="13" font-weight="600" fill="#1f2933">Proa</text>
-  <text x="870" y="90" font-family="system-ui,sans-serif" font-size="13" font-weight="600" fill="#1f2933">Popa</text>
-  <text x="500" y="45" font-family="system-ui,sans-serif" font-size="16" font-weight="600" fill="#0b6e99" text-anchor="middle">VISTA EM PLANTA  FPSO (esquemático)</text>
-  <ellipse cx="500" cy="250" rx="30" ry="18" fill="none" stroke="#8b9aab" stroke-width="1.5"/>
-  <text x="500" y="254" font-family="system-ui,sans-serif" font-size="10" fill="#8b9aab" text-anchor="middle">Mooring</text>
+  <rect x="80" y="100" width="840" height="300" fill="none" stroke="#008542" stroke-width="2" rx="2" opacity="0.8"/>
+  <line x1="280" y1="100" x2="280" y2="400" stroke="rgba(253,200,47,0.25)" stroke-width="1" stroke-dasharray="6 4"/>
+  <line x1="480" y1="100" x2="480" y2="400" stroke="rgba(253,200,47,0.25)" stroke-width="1" stroke-dasharray="6 4"/>
+  <line x1="680" y1="100" x2="680" y2="400" stroke="rgba(253,200,47,0.25)" stroke-width="1" stroke-dasharray="6 4"/>
+  <text x="180" y="255" font-family="system-ui,sans-serif" font-size="13" fill="rgba(242,245,243,0.4)" text-anchor="middle">Mód. 1</text>
+  <text x="380" y="255" font-family="system-ui,sans-serif" font-size="13" fill="rgba(242,245,243,0.4)" text-anchor="middle">Mód. 2–3</text>
+  <text x="580" y="255" font-family="system-ui,sans-serif" font-size="13" fill="rgba(242,245,243,0.4)" text-anchor="middle">Mód. 4–5</text>
+  <text x="780" y="255" font-family="system-ui,sans-serif" font-size="13" fill="rgba(242,245,243,0.4)" text-anchor="middle">Mód. 6</text>
+  <text x="95" y="88" font-family="system-ui,sans-serif" font-size="11" font-weight="500" fill="#fdc82f" letter-spacing="0.1em">PROA</text>
+  <text x="855" y="88" font-family="system-ui,sans-serif" font-size="11" font-weight="500" fill="#fdc82f" letter-spacing="0.1em">POPA</text>
+  <text x="500" y="42" font-family="system-ui,sans-serif" font-size="11" letter-spacing="0.2em" fill="rgba(0,166,81,0.7)" text-anchor="middle">PLANTA</text>
+  <ellipse cx="500" cy="250" rx="28" ry="16" fill="none" stroke="rgba(0,133,66,0.5)" stroke-width="1"/>
 </svg>

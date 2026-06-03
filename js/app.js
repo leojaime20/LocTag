@@ -335,6 +335,38 @@ function onClear() {
 searchInput.addEventListener("input", onSearchInput);
 clearBtn.addEventListener("click", onClear);
 
+function setupParallax() {
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduced) return;
+
+  const hero = document.getElementById("hero");
+  const layers = document.querySelectorAll("[data-parallax]");
+
+  let ticking = false;
+
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      const y = window.scrollY;
+      if (hero) {
+        hero.style.transform = `translate3d(0, ${y * 0.12}px, 0)`;
+        hero.style.opacity = String(Math.max(0.4, 1 - y / 400));
+      }
+      layers.forEach((el) => {
+        const speed = parseFloat(el.dataset.parallax) || 0.1;
+        el.style.transform = `translate3d(0, ${y * speed}px, 0)`;
+      });
+      ticking = false;
+    });
+  }
+
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+}
+
+setupParallax();
+
 loadTags().catch((err) => {
   console.error(err);
   const msg = "Erro ao carregar dados. Use um servidor local (veja README).";

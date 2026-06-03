@@ -1,6 +1,6 @@
-# LocTag
+# P84/85 Hull · LocTag
 
-Piloto web para localização de tags de equipamentos em FPSO: busca, tabela de resultados e destaque sincronizado em vista em planta e vista lateral.
+Piloto web para localização de tags de equipamentos no casco P84/85: busca, lista e destaque sincronizado em vista em planta e lateral. Interface escura com identidade visual Petrobras (verde e amarelo).
 
 ## Executar localmente
 
