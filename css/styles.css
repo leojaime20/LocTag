@@ -299,14 +299,21 @@ body {
   font-weight: 300;
   margin-top: 0.2rem;
   color: var(--text);
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .selection-meta {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.75rem;
   margin: 0.875rem 0 0;
   padding: 0;
+}
+
+.selection-meta > div {
+  min-width: 0;
 }
 
 .selection-meta dt {
@@ -322,6 +329,9 @@ body {
   font-size: 0.8125rem;
   font-weight: 500;
   color: var(--text);
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 /* --- Tabs --- */
@@ -445,6 +455,13 @@ body {
   box-shadow: inset 3px 0 0 var(--pb-yellow);
 }
 
+.tag-card-tag,
+.tag-card-desc {
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
 .tag-card-tag {
   font-size: 1rem;
   font-weight: 600;
@@ -458,6 +475,7 @@ body {
   font-weight: 300;
   margin-top: 0.25rem;
   color: var(--text-muted);
+  line-height: 1.4;
 }
 
 .tag-card-meta {
@@ -469,12 +487,16 @@ body {
 
 .tag-card-meta span {
   font-size: 0.6875rem;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--text-muted);
-  padding: 0.2rem 0.5rem;
+  padding: 0.25rem 0.5rem;
   border: 1px solid var(--border);
   border-radius: var(--radius);
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
 }
 
 /* --- Table (desktop) --- */
@@ -484,9 +506,11 @@ body {
 
 #tags-table {
   width: 100%;
+  min-width: 36rem;
   border-collapse: collapse;
   font-size: 0.8125rem;
   font-weight: 300;
+  table-layout: fixed;
 }
 
 #tags-table thead {
@@ -507,10 +531,43 @@ body {
   color: var(--text-muted);
 }
 
+#tags-table th,
+#tags-table td {
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
 #tags-table td {
   padding: 0.75rem 0.875rem;
   border-bottom: 1px solid var(--border);
   vertical-align: top;
+}
+
+#tags-table th:nth-child(1),
+#tags-table td:nth-child(1) {
+  width: 12%;
+}
+
+#tags-table th:nth-child(2),
+#tags-table td:nth-child(2) {
+  width: 28%;
+}
+
+#tags-table th:nth-child(3),
+#tags-table td:nth-child(3) {
+  width: 18%;
+}
+
+#tags-table th:nth-child(4),
+#tags-table td:nth-child(4) {
+  width: 10%;
+}
+
+#tags-table th:nth-child(5),
+#tags-table td:nth-child(5) {
+  width: 32%;
 }
 
 #tags-table tbody tr {
@@ -671,6 +728,17 @@ body {
 }
 
 /* --- Mobile map height --- */
+@media (max-width: 520px) {
+  .selection-meta {
+    grid-template-columns: 1fr;
+    gap: 0.625rem;
+  }
+
+  .selection-desc {
+    line-height: 1.45;
+  }
+}
+
 @media (max-width: 900px) {
   :root {
     --hero-h: 10rem;
@@ -768,6 +836,8 @@ body {
     display: block;
     max-height: 640px;
     overflow: auto;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
