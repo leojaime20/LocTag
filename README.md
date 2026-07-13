@@ -1,101 +1,122 @@
-# P84/85 Hull · LocTag
+# LocTag
 
-Piloto web para localização de tags de equipamentos no casco P84/85: busca, lista e destaque sincronizado em vista em planta e lateral. Interface escura com identidade visual Petrobras (verde e amarelo).
+Aplicação React/TypeScript para localizar tags de equipamentos sobre desenhos técnicos em PDF.
 
-## Executar localmente
+## Stack
 
-O navegador bloqueia `fetch` em arquivos abertos diretamente (`file://`). Use um servidor estático na pasta do projeto:
+- React + TypeScript + Vite
+- Tailwind CSS
+- EmbedPDF headless components
+- Firebase Authentication, Firestore e Storage
+- TanStack Query
+- React Router
+- Zustand
+- ESLint + Prettier
 
-```bash
-# Python 3
-python3 -m http.server 8080
+## Firebase
 
-# ou Node (npx)
-npx --yes serve -p 8080
-```
-
-Abra [http://localhost:8080](http://localhost:8080).
-
-## Publicar no GitHub Pages
-
-1. Envie o repositório para o GitHub.
-2. Em **Settings > Pages**, escolha a branch `main` e a pasta **/ (root)**.
-3. A URL ficará em `https://<seu-usuario>.github.io/LocTag/` (ajuste se o repositório tiver outro nome).
-
-Todos os caminhos são relativos; não é necessário build.
-
-## Firebase privado
-
-O GitHub Pages publica apenas a interface. Os dados reais devem ficar no Firestore e só serão lidos depois do login Google.
-
-Projeto Firebase criado:
+Projeto criado:
 
 - Project ID: `loctag-p84-p85`
-- Firestore: banco padrão `(default)`
-- Região: `asia-east2`
-- Modo: Firestore Native / Standard
-- Delete protection: ativada
-- Console: [https://console.firebase.google.com/project/loctag-p84-p85/overview](https://console.firebase.google.com/project/loctag-p84-p85/overview)
+- Firestore: `(default)`, região `asia-east2`
 - Web App: `LocTag P84 P85`
-- Dados iniciais: 15 documentos em `tags`
+- Dados iniciais: 15 documentos em `tags`, 1 documento em `regions`
 - Usuário autorizado inicial: `leojaime20@gmail.com`
 
-Arquivos preparados:
+Firestore já está com regras publicadas. Storage ainda precisa ser provisionado uma vez no Console:
 
-| Arquivo | Função |
-|---------|--------|
-| `firebase.json` | Configuração do Firebase CLI para regras do Firestore |
-| `firestore.rules` | Permite ler `tags` apenas para usuários autorizados |
-| `firestore.indexes.json` | Índices do Firestore |
-| `.firebaserc.example` | Modelo para apontar o projeto Firebase correto |
-| `js/firebase-config.example.js` | Modelo da configuração pública do Web App Firebase |
-
-Passos restantes:
-
-1. Ative **Authentication > Sign-in method > Google** no Console Firebase.
-2. Em **Authentication > Settings > Authorized domains**, adicione `leojaime20.github.io`.
-3. No Firestore, crie a coleção `authorizedUsers`. Cada usuário autorizado deve ter um documento cujo ID é o e-mail completo, por exemplo `usuario@empresa.com`.
-4. Para liberar mais pessoas, adicione novos documentos em `authorizedUsers` usando o e-mail completo como ID.
-
-As regras já podem ser publicadas novamente com:
+1. Abra [Firebase Storage](https://console.firebase.google.com/project/loctag-p84-p85/storage).
+2. Clique em **Get Started**.
+3. Depois rode:
 
 ```bash
-firebase deploy --only firestore:rules
+firebase deploy --only storage --project loctag-p84-p85
 ```
 
-Não publique dados reais em `data/tags.json`; ele deve ficar apenas para desenvolvimento ou demonstração.
+Também falta ativar o provider:
+
+1. Abra **Authentication > Sign-in method**.
+2. Ative **Google**.
+3. Em **Authentication > Settings > Authorized domains**, adicione `leojaime20.github.io`.
+
+## Modelo de Dados
+
+`regions`
+
+```ts
+{
+  id: string;
+  name: string;
+  plantPdf: string;
+  sidePdf: string;
+  plantCalibration: Calibration;
+  sideCalibration: Calibration;
+}
+```
+
+`tags`
+
+```ts
+{
+  id: string;
+  tag: string;
+  description: string;
+  regionId: string;
+  x: number;
+  y: number;
+  z: number;
+  type: string;
+  status: string;
+}
+```
+
+`authorizedUsers`
+
+O ID do documento deve ser o e-mail completo do usuário autorizado.
+
+## Desenvolvimento
+
+```bash
+npm install
+npm run dev
+```
+
+## Validação
+
+```bash
+npm run lint
+npm run build
+```
+
+## Publicação
+
+O projeto está configurado para GitHub Pages:
+
+- `vite.config.ts` usa base path `/LocTag/` quando `GITHUB_PAGES=true`.
+- A SPA usa `HashRouter`, compatível com GitHub Pages.
+- `.github/workflows/deploy.yml` executa `npm ci`, build e deploy automático quando houver push na branch `main`.
 
 ## Estrutura
 
-| Arquivo | Função |
-|---------|--------|
-| `index.html` | Layout da interface |
-| `css/styles.css` | Estilos responsivos |
-| `js/app.js` | Busca, tabela e marcadores |
-| `data/tags.json` | Catálogo de tags e coordenadas |
-| `assets/planta.svg` | Desenho de fundo — planta (esquemático) |
-| `assets/lateral.svg` | Desenho de fundo — lateral (esquemático) |
+```txt
+src/
+  components/
+  features/
+    tags/
+    viewer/
+  hooks/
+  pages/
+  services/
+    api/
+    firebase/
+  stores/
+  types/
+  utils/
+```
 
-## Dados e coordenadas
+## Observações
 
-Cada tag em `data/tags.json` inclui:
-
-- Metadados: `tag`, `descricao`, `sistema`, `deck`, `area`
-- `planta`: `{ "x", "y" }` no viewBox **0 0 1000 500**
-- `lateral`: `{ "x", "z" }` — o mesmo `x` alinha as duas vistas; `z` é a cota vertical no corte
-
-Para usar layouts reais:
-
-1. Substitua `assets/planta.svg` e `assets/lateral.svg` mantendo o mesmo `viewBox` (ou ajuste `index.html` e as coordenadas no JSON).
-2. Atualize `data/tags.json` com as posições calibradas (pontos de referência no desenho ajudam a converter metros para pixels SVG).
-
-## Próximas melhorias
-
-- Firebase / Firestore para dados dinâmicos e regras de acesso
-- Zoom e pan nas vistas
-- Importação de planilha CSV
-- Painel de administração
-
-## Piloto
-
-Os ~15 registros e os desenhos são **fictícios**, apenas para validar a interface com operadores.
+- A busca consulta Firestore com limite e não carrega milhares de tags no cliente.
+- Marcadores só aparecem após seleção de uma tag.
+- A transformação de coordenadas reais para PDF fica isolada em `src/utils/calibration.ts`.
+- Cada viewer mantém estado independente de zoom/pan em Zustand.
