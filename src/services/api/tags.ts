@@ -1,16 +1,4 @@
-import {
-  collection,
-  doc,
-  documentId,
-  getDoc,
-  getDocs,
-  limit,
-  orderBy,
-  query,
-  startAt,
-  endAt,
-  where,
-} from 'firebase/firestore';
+import { collection, doc, endAt, getDoc, getDocs, limit, orderBy, query, startAt, where } from 'firebase/firestore';
 
 import { db } from '../firebase/config';
 import { resolveStorageUrl } from '../firebase/storage';
@@ -71,19 +59,10 @@ export async function getTagByTag(tag: string): Promise<EquipmentTag | null> {
 }
 
 export async function getRegion(regionId: string): Promise<Region> {
-  if (!regionId || regionId === fallbackRegion.id) return fallbackRegion;
+  if (!regionId) return fallbackRegion;
   const snapshot = await getDoc(doc(db, 'regions', regionId));
   if (!snapshot.exists()) return { ...fallbackRegion, id: regionId, name: regionId };
   return normalizeRegion(snapshot.id, snapshot.data() as RawRegionDocument);
-}
-
-export async function getRegionById(regionId: string): Promise<Region> {
-  const snapshot = await getDocs(
-    query(collection(db, 'regions'), where(documentId(), '==', regionId), limit(1)),
-  );
-  const first = snapshot.docs[0];
-  if (!first) return fallbackRegion;
-  return normalizeRegion(first.id, first.data() as RawRegionDocument);
 }
 
 export async function buildSelectedTagContext(tag: EquipmentTag): Promise<SelectedTagContext> {

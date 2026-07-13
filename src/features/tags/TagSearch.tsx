@@ -10,6 +10,7 @@ interface TagSearchProps {
 
 export function TagSearch({ disabled, onSelect }: TagSearchProps) {
   const [term, setTerm] = useState('');
+  const [isOpen, setOpen] = useState(false);
   const deferredTerm = useDeferredValue(term);
   const search = useTagSearch(deferredTerm, !disabled);
   const results = search.data ?? [];
@@ -33,12 +34,13 @@ export function TagSearch({ disabled, onSelect }: TagSearchProps) {
         value={term}
         disabled={disabled}
         onChange={(event) => setTerm(event.target.value)}
+        onFocus={() => setOpen(true)}
       />
       <div className="mt-2 text-xs font-medium uppercase tracking-wide text-slate-400">
         {statusText}
       </div>
 
-      {results.length > 0 && (
+      {isOpen && results.length > 0 && (
         <div className="absolute z-20 mt-2 max-h-80 w-full overflow-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl">
           {results.map((tag) => (
             <button
@@ -47,6 +49,7 @@ export function TagSearch({ disabled, onSelect }: TagSearchProps) {
               type="button"
               onClick={() => {
                 setTerm(tag.tag);
+                setOpen(false);
                 onSelect(tag);
               }}
             >
