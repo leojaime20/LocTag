@@ -1,0 +1,19 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAuthorized() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/authorizedUsers/$(request.auth.token.email));
+    }
+
+    match /tags/{tagId} {
+      allow read: if isAuthorized();
+      allow write: if false;
+    }
+
+    match /authorizedUsers/{email} {
+      allow read, write: if false;
+    }
+  }
+}

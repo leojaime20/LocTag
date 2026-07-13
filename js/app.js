@@ -1,5 +1,5 @@
 /**
- * LocTag ? busca, lista (cards/tabela) e marcadores sincronizados.
+ * LocTag - busca, lista (cards/tabela) e marcadores sincronizados.
  * Coordenadas em data/tags.json usam o viewBox 0 0 1000 500.
  */
 
@@ -8,10 +8,15 @@ const MARKER_R_ACTIVE = 10;
 const MARKER_R_IDLE_MOBILE = 8;
 const MARKER_R_ACTIVE_MOBILE = 14;
 const MOBILE_MQ = window.matchMedia("(max-width: 900px)");
+const FIREBASE_SDK_VERSION = "12.7.0";
+const FIREBASE_APP_URL = `https://www.gstatic.com/firebasejs/${FIREBASE_SDK_VERSION}/firebase-app.js`;
+const FIREBASE_AUTH_URL = `https://www.gstatic.com/firebasejs/${FIREBASE_SDK_VERSION}/firebase-auth.js`;
+const FIREBASE_FIRESTORE_URL = `https://www.gstatic.com/firebasejs/${FIREBASE_SDK_VERSION}/firebase-firestore.js`;
 
 let allTags = [];
 let filteredTags = [];
 let activeTagId = null;
+let authReady = false;
 
 const searchInput = document.getElementById("search-input");
 const clearBtn = document.getElementById("clear-btn");
@@ -27,6 +32,11 @@ const detailDesc = document.getElementById("detail-desc");
 const detailSistema = document.getElementById("detail-sistema");
 const detailDeck = document.getElementById("detail-deck");
 const detailArea = document.getElementById("detail-area");
+const mapHint = document.querySelector(".map-hint");
+const authStatus = document.getElementById("auth-status");
+const authUser = document.getElementById("auth-user");
+const signInBtn = document.getElementById("sign-in-btn");
+const signOutBtn = document.getElementById("sign-out-btn");
 
 const mainTabs = document.querySelectorAll(".main-tab");
 const panelLista = document.getElementById("panel-lista");
@@ -45,13 +55,102 @@ function markerRadius(active) {
   return active ? MARKER_R_ACTIVE : MARKER_R_IDLE;
 }
 
-async function loadTags() {
+async function loadLocalTags() {
   const res = await fetch("data/tags.json");
   if (!res.ok) throw new Error(`Falha ao carregar tags: ${res.status}`);
   allTags = await res.json();
   filteredTags = [...allTags];
-  setupTabs();
   render();
+}
+
+async function loadFirebaseConfig() {
+  try {
+    const module = await import("./firebase-config.js");
+    return module.firebaseConfig || null;
+  } catch (err) {
+    return null;
+  }
+}
+
+async function setupFirebaseData(firebaseConfig) {
+  const [
+    { initializeApp },
+    {
+      getAuth,
+      GoogleAuthProvider,
+      onAuthStateChanged,
+      signInWithPopup,
+      signOut,
+    },
+    { collection, getDocs, getFirestore, orderBy, query },
+  ] = await Promise.all([
+    import(FIREBASE_APP_URL),
+    import(FIREBASE_AUTH_URL),
+    import(FIREBASE_FIRESTORE_URL),
+  ]);
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const provider = new GoogleAuthProvider();
+
+  signInBtn.addEventListener("click", () => {
+    signInWithPopup(auth, provider).catch((err) => {
+      updateAuthUi(null, `Falha no login: ${err.message}`);
+    });
+  });
+  signOutBtn.addEventListener("click", () => signOut(auth));
+
+  onAuthStateChanged(auth, async (user) => {
+    authReady = true;
+
+    if (!user) {
+      allTags = [];
+      filteredTags = [];
+      activeTagId = null;
+      updateAuthUi(null, "Entre com Google para carregar os dados.");
+      render();
+      return;
+    }
+
+    try {
+      updateAuthUi(user, "Carregando dados autorizados...");
+      const tagsQuery = query(collection(db, "tags"), orderBy("tag"));
+      const snapshot = await getDocs(tagsQuery);
+      allTags = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      filteredTags = [...allTags];
+      activeTagId = null;
+      updateAuthUi(user, `${allTags.length} equipamentos carregados.`);
+      render();
+    } catch (err) {
+      allTags = [];
+      filteredTags = [];
+      activeTagId = null;
+      updateAuthUi(user, `Sem acesso aos dados: ${err.message}`);
+      render();
+    }
+  });
+}
+
+function updateAuthUi(user, status) {
+  if (authStatus) authStatus.textContent = status;
+  if (authUser) authUser.textContent = user?.email || "";
+  if (signInBtn) signInBtn.hidden = Boolean(user);
+  if (signOutBtn) signOutBtn.hidden = !user;
+}
+
+async function loadTags() {
+  const firebaseConfig = await loadFirebaseConfig();
+
+  if (!firebaseConfig) {
+    updateAuthUi(null, "Modo desenvolvimento: usando data/tags.json local.");
+    if (signInBtn) signInBtn.hidden = true;
+    if (signOutBtn) signOutBtn.hidden = true;
+    await loadLocalTags();
+    return;
+  }
+
+  await setupFirebaseData(firebaseConfig);
 }
 
 function filterTags(query) {
@@ -75,6 +174,16 @@ function getTagById(tagId) {
   return allTags.find((t) => t.tag === tagId);
 }
 
+function tagLabel(tag) {
+  return `${tag.tag}, ${tag.descricao}, ${tag.sistema}, ${tag.deck}, ${tag.area}`;
+}
+
+function handleSelectableKeydown(event, tagId, options = {}) {
+  if (event.key !== "Enter" && event.key !== " ") return;
+  event.preventDefault();
+  selectTag(tagId, options);
+}
+
 function renderTable(tags) {
   tbody.innerHTML = "";
   const table = document.getElementById("tags-table");
@@ -91,6 +200,9 @@ function renderTable(tags) {
     tags.forEach((tag) => {
       const tr = document.createElement("tr");
       tr.dataset.tag = tag.tag;
+      tr.tabIndex = 0;
+      tr.setAttribute("role", "button");
+      tr.setAttribute("aria-label", `Selecionar ${tagLabel(tag)}`);
       if (tag.tag === activeTagId) tr.classList.add("row-selected");
       tr.innerHTML = `
         <td>${escapeHtml(tag.tag)}</td>
@@ -100,6 +212,9 @@ function renderTable(tags) {
         <td>${escapeHtml(tag.area)}</td>
       `;
       tr.addEventListener("click", () => selectTag(tag.tag, { switchToMap: false }));
+      tr.addEventListener("keydown", (event) => (
+        handleSelectableKeydown(event, tag.tag, { switchToMap: false })
+      ));
       tbody.appendChild(tr);
     });
   }
@@ -121,6 +236,7 @@ function renderCards(tags) {
     btn.type = "button";
     btn.className = "tag-card";
     btn.dataset.tag = tag.tag;
+    btn.setAttribute("aria-label", `Selecionar ${tagLabel(tag)}`);
     if (tag.tag === activeTagId) btn.classList.add("is-selected");
 
     btn.innerHTML = `
@@ -167,6 +283,10 @@ function mapCoords(ponto, vista) {
 function createMarker(tag, coords, isActive) {
   const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
   g.dataset.tag = tag.tag;
+  g.setAttribute("role", "button");
+  g.setAttribute("tabindex", "0");
+  g.setAttribute("focusable", "true");
+  g.setAttribute("aria-label", `Selecionar ${tagLabel(tag)}`);
 
   const r = markerRadius(isActive);
   const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -191,6 +311,9 @@ function createMarker(tag, coords, isActive) {
     e.stopPropagation();
     selectTag(tag.tag, { switchToMap: isMobile() });
   });
+  g.addEventListener("keydown", (event) => {
+    handleSelectableKeydown(event, tag.tag, { switchToMap: isMobile() });
+  });
 
   return g;
 }
@@ -199,9 +322,7 @@ function renderMarkers(tags, activeId) {
   markersPlanta.innerHTML = "";
   markersLateral.innerHTML = "";
 
-  const tagsToShow = tags.length > 0 ? tags : allTags;
-
-  tagsToShow.forEach((tag) => {
+  tags.forEach((tag) => {
     const isActive = tag.tag === activeId;
     markersPlanta.appendChild(
       createMarker(tag, mapCoords(tag.planta, "planta"), isActive)
@@ -212,7 +333,45 @@ function renderMarkers(tags, activeId) {
   });
 }
 
+function getMapTags() {
+  if (activeTagId) {
+    const activeTag = getTagById(activeTagId);
+    return activeTag ? [activeTag] : [];
+  }
+
+  if (searchInput.value.trim() && filteredTags.length === 1) {
+    return filteredTags;
+  }
+
+  return [];
+}
+
+function updateMapHint() {
+  if (!mapHint) return;
+
+  const query = searchInput.value.trim();
+
+  if (filteredTags.length === 0) {
+    mapHint.textContent = "Nenhum equipamento encontrado para localizar no mapa.";
+    return;
+  }
+
+  if (activeTagId || (query && filteredTags.length === 1)) {
+    mapHint.textContent = "Ponto exibido para o equipamento selecionado.";
+    return;
+  }
+
+  if (query) {
+    mapHint.textContent = "Refine a busca ou selecione uma tag na lista para exibir o ponto.";
+    return;
+  }
+
+  mapHint.textContent = "Busque ou selecione uma tag para exibir o ponto no mapa.";
+}
+
 function scrollToSelected() {
+  if (!activeTagId) return;
+
   const selector = `[data-tag="${CSS.escape(activeTagId)}"]`;
   const card = tagsCards.querySelector(selector);
   if (card) {
@@ -285,7 +444,8 @@ function selectTag(tagId, options = {}) {
   updateSelectionDetail();
   renderTable(filteredTags);
   renderCards(filteredTags);
-  renderMarkers(filteredTags, activeTagId);
+  renderMarkers(getMapTags(), activeTagId);
+  updateMapHint();
   scrollToSelected();
 
   if (switchToMap && isMobile()) {
@@ -294,6 +454,10 @@ function selectTag(tagId, options = {}) {
 }
 
 function updateResultCount(n) {
+  if (!authReady && signInBtn && !signInBtn.hidden) {
+    resultCount.textContent = "";
+    return;
+  }
   const label = n === allTags.length ? `${n}` : `${n}/${allTags.length}`;
   resultCount.textContent = label;
 }
@@ -301,9 +465,10 @@ function updateResultCount(n) {
 function render() {
   renderCards(filteredTags);
   renderTable(filteredTags);
-  renderMarkers(filteredTags, activeTagId);
+  renderMarkers(getMapTags(), activeTagId);
   updateSelectionDetail();
   updateResultCount(filteredTags.length);
+  updateMapHint();
 
   if (isMobile() && filteredTags.length === 0) {
     emptyState.classList.add("hidden");
@@ -366,6 +531,7 @@ function setupParallax() {
 }
 
 setupParallax();
+setupTabs();
 
 loadTags().catch((err) => {
   console.error(err);

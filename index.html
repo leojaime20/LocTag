@@ -43,6 +43,17 @@
       <button type="button" id="clear-btn" class="btn-secondary">Limpar</button>
     </section>
 
+    <section class="auth-bar" aria-live="polite">
+      <div class="auth-copy">
+        <span id="auth-status">Verificando acesso...</span>
+        <span id="auth-user"></span>
+      </div>
+      <div class="auth-actions">
+        <button type="button" id="sign-in-btn" class="btn-secondary">Entrar com Google</button>
+        <button type="button" id="sign-out-btn" class="btn-secondary" hidden>Sair</button>
+      </div>
+    </section>
+
     <article id="selection-detail" class="selection-detail hidden" aria-live="polite">
       <div class="selection-detail-inner">
         <span class="selection-tag" id="detail-tag"></span>
@@ -110,7 +121,7 @@
             </svg>
           </div>
         </div>
-        <p class="map-hint">Selecione um equipamento na lista para localizar no mapa.</p>
+        <p class="map-hint">Busque ou selecione uma tag para exibir o ponto no mapa.</p>
       </section>
     </div>
   </main>
@@ -119,6 +130,6 @@
     <p>P84/85 Hull · Dados de demonstração</p>
   </footer>
 
-  <script src="js/app.js"></script>
+  <script type="module" src="js/app.js"></script>
 </body>
 </html>

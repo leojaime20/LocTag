@@ -258,6 +258,46 @@ body {
   background: var(--pb-yellow-soft);
 }
 
+.btn-secondary:focus-visible,
+.main-tab:focus-visible,
+.view-tab:focus-visible,
+.tag-card:focus-visible,
+#tags-table tbody tr:focus-visible {
+  outline: 2px solid var(--pb-yellow);
+  outline-offset: 3px;
+}
+
+.auth-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.auth-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-size: 0.8125rem;
+  font-weight: 300;
+  color: var(--text-muted);
+}
+
+#auth-user {
+  color: var(--pb-yellow);
+  font-weight: 500;
+  overflow-wrap: break-word;
+}
+
+.auth-actions {
+  flex-shrink: 0;
+}
+
 /* --- Selection detail --- */
 .selection-detail {
   margin-bottom: 0.75rem;
@@ -579,6 +619,10 @@ body {
   background: var(--surface-elevated);
 }
 
+#tags-table tbody tr:focus-visible {
+  background: var(--surface-elevated);
+}
+
 #tags-table tbody tr.row-selected {
   background: var(--card-selected) !important;
   box-shadow: inset 3px 0 0 var(--pb-yellow);
@@ -685,6 +729,19 @@ body {
 /* --- Markers --- */
 .markers-layer circle {
   transition: r 0.35s var(--ease-out), fill 0.35s var(--ease-out);
+}
+
+.markers-layer g {
+  cursor: pointer;
+}
+
+.markers-layer g:focus-visible {
+  outline: none;
+}
+
+.markers-layer g:focus-visible circle {
+  stroke: var(--pb-yellow);
+  stroke-width: 4;
 }
 
 .marker-idle {
