@@ -21,16 +21,24 @@ interface EmbedPdfSurfaceProps {
 
 function EmbedPdfSurfaceComponent({ pdfUrl, marker, label }: EmbedPdfSurfaceProps) {
   const { engine, isLoading, error } = usePdfiumEngine();
+  const documentId = useMemo(() => `doc-${btoa(pdfUrl).replace(/[^a-zA-Z0-9]/g, '')}`, [pdfUrl]);
   const plugins = useMemo(
     () => [
       createPluginRegistration(DocumentManagerPluginPackage, {
-        initialDocuments: [{ url: pdfUrl }],
+        initialDocuments: [
+          {
+            url: pdfUrl,
+            documentId,
+            mode: 'full-fetch',
+            autoActivate: true,
+          },
+        ],
       }),
       createPluginRegistration(ViewportPluginPackage),
       createPluginRegistration(ScrollPluginPackage),
       createPluginRegistration(RenderPluginPackage),
     ],
-    [pdfUrl],
+    [documentId, pdfUrl],
   );
 
   if (isLoading) return <div className="viewer-placeholder">Carregando engine PDF...</div>;
@@ -41,8 +49,17 @@ function EmbedPdfSurfaceComponent({ pdfUrl, marker, label }: EmbedPdfSurfaceProp
       {({ activeDocumentId }) =>
         activeDocumentId && (
           <DocumentContent documentId={activeDocumentId}>
-            {({ isLoaded, isError }) => {
-              if (isError) return <div className="viewer-placeholder">Falha ao abrir PDF.</div>;
+            {({ documentState, isLoaded, isError }) => {
+              if (isError) {
+                return (
+                  <div className="viewer-placeholder">
+                    Falha ao abrir PDF.
+                    <span className="mt-2 max-w-md break-words text-xs text-slate-400">
+                      {documentState?.error ?? 'O viewer não retornou detalhes.'}
+                    </span>
+                  </div>
+                );
+              }
               if (!isLoaded) return <div className="viewer-placeholder">Carregando PDF...</div>;
 
               return (
