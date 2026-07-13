@@ -40,6 +40,13 @@ export default function TagLocatorPage() {
 
         <TagSummary context={selected} isLoading={selectedContext.isFetching} />
 
+        {selectedContext.isError && (
+          <section className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            Não foi possível carregar região/PDFs da tag selecionada. Verifique as permissões do
+            Firestore e os caminhos no Firebase Storage.
+          </section>
+        )}
+
         <ViewerWorkspace context={selected} isLoading={selectedContext.isFetching} />
       </section>
     </main>

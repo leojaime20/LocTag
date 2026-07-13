@@ -12,6 +12,16 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    match /regions/{regionId} {
+      allow read: if isAuthorized();
+      allow write: if false;
+    }
+
+    match /calibrations/{calibrationId} {
+      allow read: if isAuthorized();
+      allow write: if false;
+    }
+
     match /authorizedUsers/{email} {
       allow read, write: if false;
     }
