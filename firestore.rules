@@ -7,23 +7,29 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/authorizedUsers/$(request.auth.token.email));
     }
 
+    function isAdmin() {
+      return request.auth != null
+        && get(/databases/$(database)/documents/authorizedUsers/$(request.auth.token.email)).data.role == "admin";
+    }
+
     match /tags/{tagId} {
       allow read: if isAuthorized();
-      allow write: if false;
+      allow write: if isAdmin();
     }
 
     match /regions/{regionId} {
       allow read: if isAuthorized();
-      allow write: if false;
+      allow write: if isAdmin();
     }
 
     match /calibrations/{calibrationId} {
       allow read: if isAuthorized();
-      allow write: if false;
+      allow write: if isAdmin();
     }
 
     match /authorizedUsers/{email} {
-      allow read, write: if false;
+      allow read: if request.auth != null && request.auth.token.email == email;
+      allow write: if isAdmin();
     }
   }
 }

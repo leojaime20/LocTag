@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import { AuthStatus } from '../components/AuthStatus';
 import { TagSearch } from '../features/tags/TagSearch';
@@ -30,7 +31,14 @@ export default function TagLocatorPage() {
               Localização técnica em PDF
             </h1>
           </div>
-          <AuthStatus user={user} isReady={isReady} />
+          <div className="flex flex-col gap-2 md:items-end">
+            <AuthStatus user={user} isReady={isReady} />
+            {user?.email === 'leojaime20@gmail.com' && (
+              <Link className="text-sm font-semibold text-blue-600" to="/admin">
+                Administração
+              </Link>
+            )}
+          </div>
         </header>
 
         <section className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm md:p-4">
