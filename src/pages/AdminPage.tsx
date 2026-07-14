@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { AuthStatus } from '../components/AuthStatus';
+import { TagDataManager } from '../features/admin/TagDataManager';
 import { useAdminProfile } from '../hooks/useAdminProfile';
 import { useAuthUser } from '../hooks/useAuthUser';
 import {
@@ -269,6 +270,8 @@ export default function AdminPage() {
                 }
               />
             </div>
+
+            <TagDataManager />
           </>
         )}
       </section>

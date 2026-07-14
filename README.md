@@ -81,6 +81,12 @@ npm install
 npm run dev
 ```
 
+## Administração
+
+O passo a passo para cadastrar PDFs, calibrar as vistas e inserir coordenadas/tags está em:
+
+[docs/admin-cadastro.md](docs/admin-cadastro.md)
+
 ## Validação
 
 ```bash

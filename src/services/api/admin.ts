@@ -1,8 +1,23 @@
-import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  orderBy,
+  query,
+  serverTimestamp,
+  setDoc,
+  writeBatch,
+} from 'firebase/firestore';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 
-import type { Calibration, Region, ViewKind } from '../../types/domain';
-import { normalizeRegion, type RawRegionDocument } from '../../types/firebase';
+import type { Calibration, EquipmentTag, Region, ViewKind } from '../../types/domain';
+import {
+  normalizeRegion,
+  normalizeTag,
+  type RawRegionDocument,
+  type RawTagDocument,
+} from '../../types/firebase';
 import { auth, db, storage } from '../firebase/config';
 
 export interface AdminProfile {
@@ -38,7 +53,11 @@ export async function getEditableRegion(regionId: string): Promise<Region | null
   return normalizeRegion(snapshot.id, snapshot.data() as RawRegionDocument);
 }
 
-export async function uploadRegionPdf(regionId: string, view: ViewKind, file: File): Promise<string> {
+export async function uploadRegionPdf(
+  regionId: string,
+  view: ViewKind,
+  file: File,
+): Promise<string> {
   const suffix = view === 'plant' ? 'planta' : 'lateral';
   const path = `pdfs/${regionId}-${suffix}.pdf`;
   const fileRef = ref(storage, path);
@@ -60,4 +79,55 @@ export async function saveRegion(input: RegionInput): Promise<void> {
     },
     { merge: true },
   );
+}
+
+function tagDocumentId(tag: EquipmentTag) {
+  return encodeURIComponent((tag.id || tag.tag).trim());
+}
+
+async function commitInChunks(operations: ((batch: ReturnType<typeof writeBatch>) => void)[]) {
+  const chunkSize = 450;
+
+  for (let index = 0; index < operations.length; index += chunkSize) {
+    const batch = writeBatch(db);
+    operations.slice(index, index + chunkSize).forEach((operation) => operation(batch));
+    await batch.commit();
+  }
+}
+
+export async function getAllTags(): Promise<EquipmentTag[]> {
+  const snapshot = await getDocs(query(collection(db, 'tags'), orderBy('tag')));
+  return snapshot.docs.map((item) => normalizeTag(item.id, item.data() as RawTagDocument));
+}
+
+export async function replaceAllTags(tags: EquipmentTag[]): Promise<void> {
+  const existing = await getDocs(collection(db, 'tags'));
+  const incomingIds = new Set(tags.map(tagDocumentId));
+  const upsertOperations: ((batch: ReturnType<typeof writeBatch>) => void)[] = [];
+  const deleteOperations: ((batch: ReturnType<typeof writeBatch>) => void)[] = [];
+
+  tags.forEach((tag) => {
+    upsertOperations.push((batch) => {
+      batch.set(doc(db, 'tags', tagDocumentId(tag)), {
+        tag: tag.tag,
+        description: tag.description,
+        regionId: tag.regionId,
+        x: tag.x,
+        y: tag.y,
+        z: tag.z,
+        type: tag.type,
+        status: tag.status,
+        updatedAt: serverTimestamp(),
+      });
+    });
+  });
+
+  existing.docs.forEach((item) => {
+    if (!incomingIds.has(item.id)) {
+      deleteOperations.push((batch) => batch.delete(item.ref));
+    }
+  });
+
+  await commitInChunks(upsertOperations);
+  await commitInChunks(deleteOperations);
 }
