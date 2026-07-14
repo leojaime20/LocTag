@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { AuthStatus } from '../components/AuthStatus';
+import { CalibrationPdfPicker } from '../features/admin/CalibrationPdfPicker';
 import { TagDataManager } from '../features/admin/TagDataManager';
 import { useAdminProfile } from '../hooks/useAdminProfile';
 import { useAuthUser } from '../hooks/useAuthUser';
@@ -79,13 +80,18 @@ function NumberInput({
 
 function CalibrationEditor({
   title,
+  pdfPath,
   calibration,
+  realYLabel = 'real Y',
   onChange,
 }: {
   title: string;
+  pdfPath: string;
   calibration: Calibration;
+  realYLabel?: string;
   onChange: (calibration: Calibration) => void;
 }) {
+  const [activePointIndex, setActivePointIndex] = useState(0);
   const updatePoint = (index: number, patch: Partial<CalibrationPoint>) => {
     onChange({
       ...calibration,
@@ -99,18 +105,34 @@ function CalibrationEditor({
     <section className="rounded-2xl border border-slate-200 bg-white p-4">
       <h3 className="font-semibold text-slate-950">{title}</h3>
       <p className="mt-1 text-sm text-slate-500">
-        Informe dois pontos conhecidos para converter coordenadas reais em coordenadas do PDF.
+        Digite a coordenada real do ponto e clique no mesmo ponto no PDF para preencher PDF X/Y.
       </p>
       <div className="mt-4 grid gap-3">
         {calibration.points.map((point, index) => (
-          <div className="grid gap-3 rounded-xl bg-slate-50 p-3 md:grid-cols-4" key={index}>
+          <div
+            className={`grid gap-3 rounded-xl border p-3 md:grid-cols-[auto_1fr_1fr_1fr_1fr] ${
+              activePointIndex === index
+                ? 'border-blue-200 bg-blue-50'
+                : 'border-transparent bg-slate-50'
+            }`}
+            key={index}
+          >
+            <button
+              className={`control-button px-3 ${
+                activePointIndex === index ? 'border-blue-500 text-blue-700' : ''
+              }`}
+              type="button"
+              onClick={() => setActivePointIndex(index)}
+            >
+              P{index + 1}
+            </button>
             <NumberInput
               label={`P${index + 1} real X`}
               value={point.realX}
               onChange={(value) => updatePoint(index, { realX: value })}
             />
             <NumberInput
-              label={`P${index + 1} real Y`}
+              label={`P${index + 1} ${realYLabel}`}
               value={point.realY}
               onChange={(value) => updatePoint(index, { realY: value })}
             />
@@ -127,6 +149,14 @@ function CalibrationEditor({
           </div>
         ))}
       </div>
+      <CalibrationPdfPicker
+        activePointIndex={activePointIndex}
+        calibration={calibration}
+        pdfPath={pdfPath}
+        title={title}
+        onPick={(pointIndex, pdfX, pdfY) => updatePoint(pointIndex, { pdfX, pdfY })}
+        onSelectPoint={setActivePointIndex}
+      />
     </section>
   );
 }
@@ -369,6 +399,7 @@ export default function AdminPage() {
             <div className="grid gap-4 lg:grid-cols-2">
               <CalibrationEditor
                 title="Calibração da planta"
+                pdfPath={form.plantPdf}
                 calibration={form.plantCalibration}
                 onChange={(plantCalibration) =>
                   setForm((current) => ({ ...current, plantCalibration }))
@@ -376,7 +407,9 @@ export default function AdminPage() {
               />
               <CalibrationEditor
                 title="Calibração da lateral"
+                pdfPath={form.sidePdf}
                 calibration={form.sideCalibration}
+                realYLabel="real Z"
                 onChange={(sideCalibration) =>
                   setForm((current) => ({ ...current, sideCalibration }))
                 }

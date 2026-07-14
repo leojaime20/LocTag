@@ -99,7 +99,13 @@ Depois do upload, clique em **Salvar região** para gravar os caminhos no Firest
 
 A calibração converte coordenadas reais da tag para a posição correta no PDF.
 
-Na seção **Calibração da planta**, preencha dois pontos conhecidos.
+Na seção **Calibração da planta**, preencha dois pontos conhecidos. O modo recomendado é:
+
+1. Selecione **P1**.
+2. Digite `P1 real X` e `P1 real Y` com os valores reais vindos do 3D/projeto.
+3. Clique no mesmo ponto dentro do PDF exibido abaixo dos campos.
+4. O sistema preencherá `P1 PDF X` e `P1 PDF Y`.
+5. Repita o processo para **P2**.
 
 Cada ponto tem:
 
@@ -170,7 +176,14 @@ pdfX
 pdfY
 ```
 
-Mas aqui o campo `realY` representa a coordenada vertical usada na lateral, ou seja, o `z` da tag.
+Mas aqui o campo `realY` representa a coordenada vertical usada na lateral, ou seja, o `z` da tag. Na interface, esse campo aparece como **real Z**.
+
+O modo recomendado também é clicar no PDF:
+
+1. Selecione **P1**.
+2. Digite `P1 real X` e `P1 real Z`.
+3. Clique no mesmo ponto na vista lateral.
+4. Repita para **P2**.
 
 Exemplo:
 
