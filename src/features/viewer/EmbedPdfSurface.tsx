@@ -69,7 +69,14 @@ function EmbedPdfSurfaceComponent({ pdfUrl, marker, label }: EmbedPdfSurfaceProp
                     renderPage={({ width, height, pageIndex }) => (
                       <div className="relative" style={{ width, height }}>
                         <RenderLayer documentId={activeDocumentId} pageIndex={pageIndex} />
-                        {pageIndex === 0 && <MarkerOverlay marker={marker} label={label} />}
+                        {pageIndex === 0 && (
+                          <MarkerOverlay
+                            marker={marker}
+                            label={label}
+                            width={width}
+                            height={height}
+                          />
+                        )}
                       </div>
                     )}
                   />

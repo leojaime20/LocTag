@@ -3,15 +3,17 @@ import type { PdfPoint } from '../../utils/calibration';
 interface MarkerOverlayProps {
   marker: PdfPoint | null;
   label: string | null;
+  width?: number;
+  height?: number;
 }
 
-export function MarkerOverlay({ marker, label }: MarkerOverlayProps) {
+export function MarkerOverlay({ marker, label, width = 1000, height = 500 }: MarkerOverlayProps) {
   if (!marker) return null;
 
   return (
     <svg
       className="pointer-events-none absolute inset-0 h-full w-full overflow-visible"
-      viewBox="0 0 1000 500"
+      viewBox={`0 0 ${width} ${height}`}
       preserveAspectRatio="none"
       aria-hidden="true"
     >
