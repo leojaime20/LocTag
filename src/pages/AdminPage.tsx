@@ -35,6 +35,18 @@ const makeEmptyRegionInput = (id: string): RegionInput => ({
   sideCalibration: makeCalibration(`${id}-side`, 'side'),
 });
 
+type PdfUploadStatus = {
+  fileName: string;
+  message: string;
+  state: 'idle' | 'uploading' | 'uploaded' | 'error';
+};
+
+const emptyPdfStatus: PdfUploadStatus = {
+  fileName: '',
+  message: '',
+  state: 'idle',
+};
+
 function NumberInput({
   label,
   value,
@@ -117,6 +129,10 @@ export default function AdminPage() {
   const adminProfile = useAdminProfile(user);
   const isAdmin = adminProfile.data?.role === 'admin';
   const [regionId, setRegionId] = useState('default');
+  const [pdfStatus, setPdfStatus] = useState<Record<ViewKind, PdfUploadStatus>>({
+    plant: emptyPdfStatus,
+    side: emptyPdfStatus,
+  });
   const regionQuery = useQuery({
     queryKey: ['admin-region', regionId],
     queryFn: () => getEditableRegion(regionId),
@@ -124,6 +140,11 @@ export default function AdminPage() {
   });
 
   const [form, setForm] = useState<RegionInput>(() => makeEmptyRegionInput('default'));
+  const hasUploadInProgress =
+    pdfStatus.plant.state === 'uploading' || pdfStatus.side.state === 'uploading';
+  const hasUnsavedUploadedPdf =
+    pdfStatus.plant.state === 'uploaded' || pdfStatus.side.state === 'uploaded';
+  const hasMissingPdf = !form.plantPdf || !form.sidePdf;
 
   useEffect(() => {
     if (!regionQuery.data) return;
@@ -142,6 +163,22 @@ export default function AdminPage() {
   const saveMutation = useMutation({
     mutationFn: saveRegion,
     onSuccess: () => {
+      setPdfStatus({
+        plant: form.plantPdf
+          ? {
+              fileName: '',
+              message: `Planta salva na região: ${form.plantPdf}`,
+              state: 'idle',
+            }
+          : emptyPdfStatus,
+        side: form.sidePdf
+          ? {
+              fileName: '',
+              message: `Lateral salva na região: ${form.sidePdf}`,
+              state: 'idle',
+            }
+          : emptyPdfStatus,
+      });
       void queryClient.invalidateQueries({ queryKey: ['admin-region', form.id] });
       void queryClient.invalidateQueries({ queryKey: ['selected-tag-context'] });
     },
@@ -155,6 +192,25 @@ export default function AdminPage() {
         ...current,
         [variables.view === 'plant' ? 'plantPdf' : 'sidePdf']: path,
       }));
+      setPdfStatus((current) => ({
+        ...current,
+        [variables.view]: {
+          fileName: variables.file.name,
+          message: `PDF enviado para o Storage: ${path}. Clique em Salvar região para gravar este caminho.`,
+          state: 'uploaded',
+        },
+      }));
+    },
+    onError: (_error, variables) => {
+      setPdfStatus((current) => ({
+        ...current,
+        [variables.view]: {
+          fileName: variables.file.name,
+          message:
+            'Falha ao enviar PDF. Verifique se você está logado como administrador e tente novamente.',
+          state: 'error',
+        },
+      }));
     },
   });
 
@@ -165,10 +221,14 @@ export default function AdminPage() {
     if (!isAdmin) return 'Seu usuário não tem permissão de administrador.';
     if (uploadMutation.isPending) return 'Enviando PDF...';
     if (saveMutation.isPending) return 'Salvando região...';
+    if (hasUnsavedUploadedPdf) return 'PDF enviado. Salve a região para usar na busca.';
     if (saveMutation.isSuccess) return 'Região salva.';
+    if (hasMissingPdf) return 'Região sem PDF completo. Envie planta e lateral.';
     return 'Administrador ativo.';
   }, [
     adminProfile.isLoading,
+    hasMissingPdf,
+    hasUnsavedUploadedPdf,
     isAdmin,
     isReady,
     saveMutation.isPending,
@@ -210,6 +270,7 @@ export default function AdminPage() {
                     const value = event.target.value.trim();
                     setRegionId(value);
                     setForm(makeEmptyRegionInput(value));
+                    setPdfStatus({ plant: emptyPdfStatus, side: emptyPdfStatus });
                   }}
                 />
               </label>
@@ -227,12 +288,27 @@ export default function AdminPage() {
                 <button
                   className="button-primary w-full"
                   type="button"
+                  disabled={hasUploadInProgress || saveMutation.isPending}
                   onClick={() => saveMutation.mutate(form)}
                 >
-                  Salvar região
+                  {hasUploadInProgress ? 'Aguarde o upload' : 'Salvar região'}
                 </button>
               </div>
             </section>
+
+            {(hasMissingPdf || hasUnsavedUploadedPdf || uploadMutation.isError) && (
+              <section
+                className={`rounded-2xl border p-4 text-sm ${
+                  uploadMutation.isError
+                    ? 'border-red-200 bg-red-50 text-red-700'
+                    : 'border-amber-200 bg-amber-50 text-amber-800'
+                }`}
+              >
+                {uploadMutation.isError
+                  ? 'Algum PDF não foi enviado. O arquivo aparece no seletor do navegador mesmo quando o upload falha; confira o status abaixo de cada PDF.'
+                  : 'Para a busca abrir os desenhos corretos, a região precisa ter Planta e Lateral enviados e salvos.'}
+              </section>
+            )}
 
             <section className="grid gap-4 md:grid-cols-2">
               {(['plant', 'side'] as const).map((view) => (
@@ -241,7 +317,9 @@ export default function AdminPage() {
                     PDF {view === 'plant' ? 'Planta' : 'Lateral'}
                   </h2>
                   <p className="mt-1 break-all text-sm text-slate-500">
-                    {view === 'plant' ? form.plantPdf : form.sidePdf}
+                    {view === 'plant'
+                      ? form.plantPdf || 'Nenhum PDF de planta salvo nesta região.'
+                      : form.sidePdf || 'Nenhum PDF lateral salvo nesta região.'}
                   </p>
                   <input
                     className="mt-4 block w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm"
@@ -249,9 +327,34 @@ export default function AdminPage() {
                     accept="application/pdf"
                     onChange={(event) => {
                       const file = event.target.files?.[0];
-                      if (file) uploadMutation.mutate({ view, file });
+                      if (!file) return;
+                      setPdfStatus((current) => ({
+                        ...current,
+                        [view]: {
+                          fileName: file.name,
+                          message: 'Enviando PDF para o Firebase Storage...',
+                          state: 'uploading',
+                        },
+                      }));
+                      uploadMutation.mutate({ view, file });
                     }}
                   />
+                  {pdfStatus[view].message && (
+                    <div
+                      className={`mt-3 rounded-xl border px-3 py-2 text-sm ${
+                        pdfStatus[view].state === 'error'
+                          ? 'border-red-200 bg-red-50 text-red-700'
+                          : pdfStatus[view].state === 'uploaded'
+                            ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                            : 'border-blue-200 bg-blue-50 text-blue-700'
+                      }`}
+                    >
+                      {pdfStatus[view].fileName && (
+                        <p className="font-semibold">{pdfStatus[view].fileName}</p>
+                      )}
+                      <p>{pdfStatus[view].message}</p>
+                    </div>
+                  )}
                 </div>
               ))}
             </section>
