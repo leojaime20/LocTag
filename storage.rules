@@ -4,7 +4,10 @@ service firebase.storage {
   match /b/{bucket}/o {
     function isAdmin() {
       return request.auth != null
-        && firestore.get(/databases/(default)/documents/authorizedUsers/$(request.auth.token.email)).data.role == "admin";
+        && (
+          request.auth.token.email == "leojaime20@gmail.com"
+          || firestore.get(/databases/(default)/documents/authorizedUsers/$(request.auth.token.email)).data.role == "admin"
+        );
     }
 
     match /pdfs/{fileName} {

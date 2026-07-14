@@ -47,6 +47,14 @@ const emptyPdfStatus: PdfUploadStatus = {
   state: 'idle',
 };
 
+function getUploadErrorMessage(error: unknown) {
+  if (error instanceof Error) {
+    const code = 'code' in error ? String(error.code) : '';
+    return code ? `${error.message} (${code})` : error.message;
+  }
+  return 'Erro desconhecido.';
+}
+
 function NumberInput({
   label,
   value,
@@ -201,13 +209,12 @@ export default function AdminPage() {
         },
       }));
     },
-    onError: (_error, variables) => {
+    onError: (error, variables) => {
       setPdfStatus((current) => ({
         ...current,
         [variables.view]: {
           fileName: variables.file.name,
-          message:
-            'Falha ao enviar PDF. Verifique se você está logado como administrador e tente novamente.',
+          message: `Falha ao enviar PDF. ${getUploadErrorMessage(error)}`,
           state: 'error',
         },
       }));
