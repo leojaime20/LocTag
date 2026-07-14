@@ -26,6 +26,15 @@ const makeCalibration = (id: string, pdfId: string): Calibration => ({
   rotationDeg: 0,
 });
 
+const makeEmptyRegionInput = (id: string): RegionInput => ({
+  id,
+  name: id === 'default' ? 'P84/85 Hull' : id,
+  plantPdf: '',
+  sidePdf: '',
+  plantCalibration: makeCalibration(`${id}-plant`, 'plant'),
+  sideCalibration: makeCalibration(`${id}-side`, 'side'),
+});
+
 function NumberInput({
   label,
   value,
@@ -114,14 +123,7 @@ export default function AdminPage() {
     enabled: isAdmin && regionId.trim().length > 0,
   });
 
-  const [form, setForm] = useState<RegionInput>(() => ({
-    id: 'default',
-    name: 'P84/85 Hull - Demo',
-    plantPdf: 'pdfs/planta-demo.pdf',
-    sidePdf: 'pdfs/lateral-demo.pdf',
-    plantCalibration: makeCalibration('default-plant', 'planta-demo'),
-    sideCalibration: makeCalibration('default-side', 'lateral-demo'),
-  }));
+  const [form, setForm] = useState<RegionInput>(() => makeEmptyRegionInput('default'));
 
   useEffect(() => {
     if (!regionQuery.data) return;
@@ -207,7 +209,7 @@ export default function AdminPage() {
                   onChange={(event) => {
                     const value = event.target.value.trim();
                     setRegionId(value);
-                    setForm((current) => ({ ...current, id: value }));
+                    setForm(makeEmptyRegionInput(value));
                   }}
                 />
               </label>
