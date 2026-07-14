@@ -14,7 +14,9 @@ export function ViewerWorkspace({ context, isLoading }: ViewerWorkspaceProps) {
   const setView = (view: ViewKind) => setActiveMobileView(view);
 
   if (isLoading) {
-    return <section className="panel min-h-96 text-sm text-slate-500">Carregando viewers...</section>;
+    return (
+      <section className="panel min-h-96 text-sm text-slate-500">Carregando viewers...</section>
+    );
   }
 
   return (
@@ -32,7 +34,7 @@ export function ViewerWorkspace({ context, isLoading }: ViewerWorkspaceProps) {
         ))}
       </div>
 
-      <div className="grid min-h-[560px] flex-1 grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="grid min-h-[62vh] flex-1 grid-cols-1 gap-4 md:min-h-[560px] md:grid-cols-2">
         <PdfViewerPanel
           view="plant"
           title="Planta"

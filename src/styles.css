@@ -2,7 +2,13 @@
 
 :root {
   font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
   color-scheme: light;
 }
 
@@ -88,6 +94,8 @@ input {
 }
 
 .viewer-canvas {
+  width: 100%;
+  max-width: 100%;
   min-height: 360px;
   flex: 1;
   overflow: auto;
@@ -97,8 +105,15 @@ input {
 }
 
 .viewer-transform {
+  display: inline-block;
   transform-origin: top left;
   transition: transform 140ms ease;
+  zoom: var(--viewer-zoom, 1);
+}
+
+.viewer-empty-page {
+  aspect-ratio: 2 / 1;
+  width: min(720px, calc((100vw - 4rem) / var(--viewer-zoom, 1)));
 }
 
 .viewer-placeholder {
@@ -179,13 +194,18 @@ input {
 
 @media (max-width: 767px) {
   .viewer-canvas {
-    min-height: 58vh;
-    padding: 0.75rem;
+    min-height: 62vh;
+    padding: 0.5rem;
   }
 
   .viewer-controls {
     position: sticky;
     bottom: 0;
     background: #ffffff;
+    scrollbar-width: none;
+  }
+
+  .viewer-controls::-webkit-scrollbar {
+    display: none;
   }
 }
