@@ -157,16 +157,16 @@ export function CalibrationPdfPicker({
                                         r="10"
                                         fill={
                                           index === activePointIndex
-                                            ? 'rgb(37 99 235 / 0.22)'
-                                            : 'rgb(15 23 42 / 0.12)'
+                                            ? 'rgb(253 200 47 / 0.32)'
+                                            : 'rgb(7 24 14 / 0.12)'
                                         }
-                                        stroke={index === activePointIndex ? '#2563eb' : '#475569'}
+                                        stroke={index === activePointIndex ? '#008542' : '#53665b'}
                                         strokeWidth="2"
                                       />
                                       <text
                                         x="14"
                                         y="-12"
-                                        fill={index === activePointIndex ? '#1d4ed8' : '#334155'}
+                                        fill={index === activePointIndex ? '#006b35' : '#2e4036'}
                                         fontSize="18"
                                         fontWeight="700"
                                         paintOrder="stroke"

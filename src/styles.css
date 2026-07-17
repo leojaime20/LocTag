@@ -1,5 +1,27 @@
 @import 'tailwindcss';
 
+@theme {
+  --color-blue-50: #effaf4;
+  --color-blue-100: #d8f1e3;
+  --color-blue-200: #aee2c6;
+  --color-blue-500: #008542;
+  --color-blue-600: #008542;
+  --color-blue-700: #006b35;
+  --color-blue-800: #00582c;
+
+  --color-slate-50: #f4f8f5;
+  --color-slate-100: #e8f0eb;
+  --color-slate-200: #cfded5;
+  --color-slate-300: #aebfb5;
+  --color-slate-400: #708277;
+  --color-slate-500: #53665b;
+  --color-slate-600: #3d4f45;
+  --color-slate-700: #2e4036;
+  --color-slate-800: #1e3026;
+  --color-slate-900: #0f2418;
+  --color-slate-950: #07180e;
+}
+
 :root {
   font-family:
     Inter,
@@ -10,6 +32,14 @@
     'Segoe UI',
     sans-serif;
   color-scheme: light;
+  --petrobras-green: #008542;
+  --petrobras-green-dark: #006b35;
+  --petrobras-green-soft: #effaf4;
+  --petrobras-yellow: #fdc82f;
+  --petrobras-yellow-soft: #fff7d6;
+  --petrobras-border: #cfded5;
+  --petrobras-ink: #07180e;
+  --petrobras-muted: #53665b;
 }
 
 * {
@@ -20,7 +50,7 @@ body {
   margin: 0;
   min-width: 320px;
   overflow-x: hidden;
-  background: #f8fafc;
+  background: #f4f8f5;
 }
 
 button,
@@ -32,15 +62,15 @@ input {
   display: grid;
   min-height: 100vh;
   place-items: center;
-  color: #64748b;
+  color: var(--petrobras-muted);
 }
 
 .panel {
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--petrobras-border);
   border-radius: 1rem;
   background: #ffffff;
   padding: 1rem;
-  box-shadow: 0 1px 2px rgb(15 23 42 / 0.04);
+  box-shadow: 0 1px 2px rgb(7 24 14 / 0.05);
 }
 
 .button-primary,
@@ -58,7 +88,7 @@ input {
 }
 
 .button-primary {
-  background: #2563eb;
+  background: var(--petrobras-green);
   padding: 0 1rem;
   color: white;
   font-weight: 600;
@@ -66,10 +96,10 @@ input {
 
 .button-secondary,
 .control-button {
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--petrobras-border);
   background: #ffffff;
   padding: 0 0.85rem;
-  color: #334155;
+  color: #2e4036;
   font-weight: 600;
 }
 
@@ -78,7 +108,7 @@ input {
 .control-button:focus-visible,
 .icon-button:focus-visible,
 .segmented-button:focus-visible {
-  outline: 3px solid #bfdbfe;
+  outline: 3px solid rgb(253 200 47 / 0.55);
   outline-offset: 2px;
 }
 
@@ -95,10 +125,10 @@ input {
   min-height: 0;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--petrobras-border);
   border-radius: 1rem;
   background: #ffffff;
-  box-shadow: 0 1px 2px rgb(15 23 42 / 0.04);
+  box-shadow: 0 1px 2px rgb(7 24 14 / 0.05);
 }
 
 .viewer-canvas {
@@ -108,7 +138,7 @@ input {
   flex: 1;
   overflow: auto;
   overscroll-behavior: contain;
-  background: #f1f5f9;
+  background: #e8f0eb;
   padding: 1rem;
 }
 
@@ -128,10 +158,10 @@ input {
   display: grid;
   min-height: 360px;
   place-items: center;
-  border: 1px dashed #cbd5e1;
+  border: 1px dashed #aebfb5;
   border-radius: 0.75rem;
   background: #ffffff;
-  color: #64748b;
+  color: var(--petrobras-muted);
   font-size: 0.875rem;
 }
 
@@ -140,7 +170,7 @@ input {
   gap: 0.5rem;
   align-items: center;
   overflow-x: auto;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--petrobras-border);
   padding: 0.75rem;
 }
 
@@ -148,40 +178,40 @@ input {
   display: grid;
   width: 44px;
   place-items: center;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--petrobras-border);
   background: #ffffff;
-  color: #0f172a;
+  color: var(--petrobras-ink);
   font-weight: 700;
 }
 
 .segmented-button {
   min-width: 7rem;
   padding: 0 1rem;
-  color: #64748b;
+  color: var(--petrobras-muted);
   font-weight: 700;
 }
 
 .segmented-button.is-active {
-  background: #2563eb;
-  color: #ffffff;
+  background: var(--petrobras-yellow);
+  color: var(--petrobras-ink);
 }
 
 .marker-core {
-  fill: #2563eb;
+  fill: var(--petrobras-green);
   stroke: #ffffff;
   stroke-width: 3;
 }
 
 .marker-pulse {
-  fill: rgb(37 99 235 / 0.16);
-  stroke: rgb(37 99 235 / 0.42);
+  fill: rgb(253 200 47 / 0.25);
+  stroke: rgb(0 133 66 / 0.48);
   stroke-width: 2;
   transform-origin: center;
   animation: pulse-marker 1.8s ease-out infinite;
 }
 
 .marker-label {
-  fill: #1e3a8a;
+  fill: var(--petrobras-green-dark);
   font-size: 22px;
   font-weight: 700;
   paint-order: stroke;

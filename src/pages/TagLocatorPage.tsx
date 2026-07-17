@@ -27,9 +27,7 @@ export default function TagLocatorPage() {
         <header className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-xs font-medium uppercase tracking-[0.18em] text-blue-600">LocTag</p>
-            <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950">
-              Localização técnica em PDF
-            </h1>
+            <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950">Busca TAG</h1>
           </div>
           <div className="flex flex-col gap-2 md:items-end">
             <AuthStatus user={user} isReady={isReady} />
