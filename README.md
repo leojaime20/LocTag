@@ -62,6 +62,9 @@ Também falta ativar o provider:
   tag: string;
   description: string;
   regionId: string;
+  moduleRegion: string;
+  owner: string;
+  elevation: string;
   x: number;
   y: number;
   z: number;

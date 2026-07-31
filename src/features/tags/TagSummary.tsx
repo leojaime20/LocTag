@@ -32,6 +32,9 @@ export function TagSummary({ context, isLoading }: TagSummaryProps) {
   const fields = [
     ['Descrição', context.tag.description],
     ['Região', context.region.name],
+    ['moduleRegion', context.tag.moduleRegion || '—'],
+    ['Owner', context.tag.owner || '—'],
+    ['Elevação', context.tag.elevation || '—'],
     ['X', context.tag.x],
     ['Y', context.tag.y],
     ['Z', context.tag.z],
@@ -51,7 +54,7 @@ export function TagSummary({ context, isLoading }: TagSummaryProps) {
         </button>
       </div>
 
-      <dl className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-7">
+      <dl className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {fields.map(([label, value]) => (
           <div className="rounded-xl bg-slate-50 px-3 py-2" key={label}>
             <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
