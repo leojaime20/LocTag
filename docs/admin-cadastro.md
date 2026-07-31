@@ -215,7 +215,7 @@ Depois de subir PDFs e ajustar calibração:
 Na seção **Tabela de tags** da área administrativa, você pode:
 
 - ver os dados atuais da coleção `tags`;
-- filtrar a tabela por tag, descrição, região, tipo ou status;
+- filtrar a tabela por tag, descrição, região, `moduleRegion`, owner, elevação, tipo ou status;
 - baixar um arquivo modelo;
 - baixar os dados atuais;
 - importar um CSV validado;
@@ -236,17 +236,19 @@ Fluxo recomendado:
 Colunas obrigatórias:
 
 ```txt
-tag,description,regionId,x,y,z,type,status
+tag,description,regionId,moduleRegion,owner,elevation,x,y,z,type,status
 ```
 
 A coluna `id` é opcional. Se ela não existir, o sistema usa a própria `tag` como ID do documento.
+As colunas `moduleRegion`, `owner` e `elevation` devem existir, mas seus valores podem ficar
+vazios.
 
 Formato recomendado:
 
 ```csv
-id,tag,description,regionId,x,y,z,type,status
-P-101A,P-101A,Bomba de drenagem,default,420,280,380,Processo,active
-V-201,V-201,Separador trifásico,default,580,260,320,Processo,active
+id,tag,description,regionId,moduleRegion,owner,elevation,x,y,z,type,status
+P-101A,P-101A,Bomba de drenagem,default,Módulo 01,Operação,EL +20.000,420,280,380,Processo,active
+V-201,V-201,Separador trifásico,default,,,,580,260,320,Processo,active
 ```
 
 O importador aceita CSV separado por vírgula, ponto e vírgula ou tabulação. Arquivos `.xlsx` devem ser exportados como `.csv` antes do envio.
@@ -255,6 +257,7 @@ Validações feitas antes da substituição:
 
 - colunas obrigatórias presentes;
 - `tag`, `description` e `regionId` preenchidos;
+- `moduleRegion`, `owner` e `elevation` podem estar vazios;
 - tags duplicadas bloqueadas;
 - `x`, `y` e `z` numéricos;
 - `status` padronizado como `active`, `inactive` ou `unknown`.
@@ -283,6 +286,9 @@ Campos obrigatórios:
 tag: "P-101A"
 description: "Bomba de drenagem"
 regionId: "default"
+moduleRegion: "Módulo 01"
+owner: "Operação"
+elevation: "EL +20.000"
 x: 420
 y: 280
 z: 380
@@ -293,6 +299,8 @@ status: "active"
 Regras importantes:
 
 - `regionId` deve ser igual ao ID cadastrado na área admin.
+- `moduleRegion`, `owner` e `elevation` são metadados opcionais e podem ser strings vazias.
+- `elevation` é independente da coordenada técnica `z`.
 - `x` e `y` posicionam o marcador na planta.
 - `x` e `z` posicionam o marcador na lateral.
 - `tag` é o texto pesquisado pelo usuário.
@@ -314,16 +322,19 @@ P-101A
 
 6. Adicione os campos:
 
-| Campo         | Tipo   | Exemplo             |
-| ------------- | ------ | ------------------- |
-| `tag`         | string | `P-101A`            |
-| `description` | string | `Bomba de drenagem` |
-| `regionId`    | string | `default`           |
-| `x`           | number | `420`               |
-| `y`           | number | `280`               |
-| `z`           | number | `380`               |
-| `type`        | string | `Processo`          |
-| `status`      | string | `active`            |
+| Campo          | Tipo   | Exemplo             |
+| -------------- | ------ | ------------------- |
+| `tag`          | string | `P-101A`            |
+| `description`  | string | `Bomba de drenagem` |
+| `regionId`     | string | `default`           |
+| `moduleRegion` | string | `Módulo 01`         |
+| `owner`        | string | `Operação`          |
+| `elevation`    | string | `EL +20.000`        |
+| `x`            | number | `420`               |
+| `y`            | number | `280`               |
+| `z`            | number | `380`               |
+| `type`         | string | `Processo`          |
+| `status`       | string | `active`            |
 
 7. Salve.
 
@@ -336,7 +347,7 @@ Recomendação:
 1. Preparar uma planilha CSV com colunas:
 
 ```txt
-tag,description,regionId,x,y,z,type,status
+tag,description,regionId,moduleRegion,owner,elevation,x,y,z,type,status
 ```
 
 2. Usar a seção **Tabela de tags** da área administrativa para importar.
@@ -344,9 +355,9 @@ tag,description,regionId,x,y,z,type,status
 Formato recomendado:
 
 ```csv
-tag,description,regionId,x,y,z,type,status
-P-101A,Bomba de drenagem,default,420,280,380,Processo,active
-V-201,Separador trifásico,default,580,260,320,Processo,active
+tag,description,regionId,moduleRegion,owner,elevation,x,y,z,type,status
+P-101A,Bomba de drenagem,default,Módulo 01,Operação,EL +20.000,420,280,380,Processo,active
+V-201,Separador trifásico,default,,,,580,260,320,Processo,active
 ```
 
 ## 11. Validar se está correto

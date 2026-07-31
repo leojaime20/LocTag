@@ -11,6 +11,9 @@ export interface RawTagDocument {
   description?: string;
   descricao?: string;
   regionId?: string;
+  moduleRegion?: string;
+  owner?: string;
+  elevation?: string;
   x?: number;
   y?: number;
   z?: number;
@@ -56,6 +59,9 @@ export function normalizeTag(id: string, data: RawTagDocument): EquipmentTag {
     tag: data.tag ?? id,
     description: data.description ?? data.descricao ?? 'Sem descrição',
     regionId: data.regionId ?? 'default',
+    moduleRegion: data.moduleRegion ?? '',
+    owner: data.owner ?? '',
+    elevation: data.elevation ?? '',
     x: data.x ?? data.planta?.x ?? 0,
     y: data.y ?? data.planta?.y ?? 0,
     z: data.z ?? data.lateral?.z ?? data.lateral?.y ?? 0,
