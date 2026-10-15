@@ -2,12 +2,15 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 
 import { getAllTags, replaceAllTags } from '../../services/api/admin';
+import { hasValidBounds, resolveRegion } from '../../utils/regions';
+import type { Region, VolumeRegion } from '../../types/domain';
 import type { EquipmentTag } from '../../types/domain';
 import { downloadTextFile, parseCsv, tagsToCsv, validateTagRows } from '../../utils/csv';
 
 interface ImportPreview {
   tags: EquipmentTag[];
   errors: string[];
+  invalidCount: number;
   filename: string;
 }
 
@@ -22,7 +25,11 @@ function readFileAsText(file: File): Promise<string> {
   });
 }
 
-export function TagDataManager() {
+export function TagDataManager({ regions }: { regions: Region[] }) {
+  const volumes = useMemo(
+    () => regions.filter((r) => !r.archived && hasValidBounds(r)) as VolumeRegion[],
+    [regions],
+  );
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState('');
   const [preview, setPreview] = useState<ImportPreview | null>(null);
@@ -37,7 +44,14 @@ export function TagDataManager() {
     const term = filter.trim().toLowerCase();
     const filtered = term
       ? tags.filter((tag) =>
-          [tag.tag, tag.description, tag.regionId, tag.type, tag.status]
+          [
+            tag.tag,
+            tag.description,
+            resolveRegion(tag, volumes).label,
+            tag.regionId,
+            tag.type,
+            tag.status,
+          ]
             .join(' ')
             .toLowerCase()
             .includes(term),
@@ -45,14 +59,18 @@ export function TagDataManager() {
       : tags;
 
     return filtered.slice(0, 200);
-  }, [filter, tags]);
+  }, [filter, tags, volumes]);
 
   const replaceMutation = useMutation({
     mutationFn: replaceAllTags,
+    onError: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin-tags'] });
+    },
     onSuccess: () => {
       setPreview(null);
       void queryClient.invalidateQueries({ queryKey: ['admin-tags'] });
       void queryClient.invalidateQueries({ queryKey: ['tag-search'] });
+      void queryClient.invalidateQueries({ queryKey: ['tag'] });
     },
   });
 
@@ -86,6 +104,7 @@ export function TagDataManager() {
       setPreview({
         filename: file.name,
         tags: [],
+        invalidCount: 0,
         errors: [
           'Formato ainda não suportado. Exporte sua planilha como CSV com colunas tag,description,regionId,x,y,z,type,status.',
         ],
@@ -93,14 +112,24 @@ export function TagDataManager() {
       return;
     }
 
-    const text = await readFileAsText(file);
-    const parsed = parseCsv(text);
-    const validated = validateTagRows(parsed.rows);
-    setPreview({
-      filename: file.name,
-      tags: validated.tags,
-      errors: [...parsed.errors, ...validated.errors],
-    });
+    try {
+      const text = await readFileAsText(file);
+      const parsed = parseCsv(text);
+      const validated = validateTagRows(parsed.rows, parsed.lineNumbers);
+      setPreview({
+        filename: file.name,
+        tags: validated.tags,
+        errors: [...parsed.errors, ...validated.errors],
+        invalidCount: parsed.invalidCount + validated.invalidCount,
+      });
+    } catch {
+      setPreview({
+        filename: file.name,
+        tags: [],
+        invalidCount: 0,
+        errors: ['Não foi possível ler o arquivo. Selecione o CSV novamente.'],
+      });
+    }
   };
 
   return (
@@ -117,7 +146,12 @@ export function TagDataManager() {
           <button className="button-secondary" type="button" onClick={exportTemplate}>
             Baixar modelo
           </button>
-          <button className="button-secondary" type="button" onClick={exportCurrent}>
+          <button
+            className="button-secondary"
+            type="button"
+            disabled={!tagsQuery.isSuccess || replaceMutation.isPending}
+            onClick={exportCurrent}
+          >
             Baixar dados atuais
           </button>
           <label className="button-primary grid cursor-pointer place-items-center px-4">
@@ -125,6 +159,7 @@ export function TagDataManager() {
             <input
               className="hidden"
               type="file"
+              disabled={replaceMutation.isPending}
               accept=".csv,text/csv"
               onChange={(event) => {
                 const file = event.target.files?.[0];
@@ -152,10 +187,46 @@ export function TagDataManager() {
         <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 p-4">
           <h3 className="font-semibold text-slate-950">Prévia da importação: {preview.filename}</h3>
           <p className="mt-1 text-sm text-slate-600">
+            {preview.tags.length} registros válidos • {preview.invalidCount} inválidos.{' '}
             {preview.errors.length === 0
               ? `${preview.tags.length} tags válidas. Ao confirmar, a coleção tags será substituída inteira.`
               : 'Corrija os erros abaixo antes de importar.'}
           </p>
+          <p className="mt-2 text-sm text-slate-600">
+            Ao confirmar, as TAGs presentes serão atualizadas e as ausentes serão removidas. Campos
+            legados das TAGs mantidas serão preservados. Operações acima de 450 alterações usam
+            lotes; falhas podem interromper a substituição. Exporte os dados atuais antes de
+            continuar.
+          </p>
+          {preview.tags.length > 0 && (
+            <div className="mt-3 overflow-auto max-h-64">
+              <table className="w-full text-sm bg-white">
+                <thead>
+                  <tr>
+                    {['TAG', 'Descrição', 'X', 'Y', 'Z', 'regionId', 'Tipo', 'Status'].map((h) => (
+                      <th className="p-2 text-left" key={h}>
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {preview.tags.slice(0, 20).map((t) => (
+                    <tr key={t.id}>
+                      {[t.tag, t.description, t.x, t.y, t.z, t.regionId, t.type, t.status].map(
+                        (v, i) => (
+                          <td className="p-2 border-t border-slate-100" key={i}>
+                            {v}
+                          </td>
+                        ),
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p>Prévia dos primeiros 20 registros válidos.</p>
+            </div>
+          )}
           {preview.errors.length > 0 && (
             <ul className="mt-3 max-h-40 overflow-auto rounded-xl bg-white p-3 text-sm text-red-700">
               {preview.errors.slice(0, 50).map((error) => (
@@ -168,6 +239,7 @@ export function TagDataManager() {
               <button
                 className="button-primary"
                 type="button"
+                disabled={replaceMutation.isPending || preview.tags.length === 0}
                 onClick={() => replaceMutation.mutate(preview.tags)}
               >
                 Confirmar e substituir tabela
@@ -184,18 +256,23 @@ export function TagDataManager() {
         <p className="mt-3 text-sm font-medium text-blue-600">Substituindo coleção tags...</p>
       )}
       {replaceMutation.isError && (
-        <p className="mt-3 text-sm font-medium text-red-700">
-          Falha ao substituir tags. Verifique permissões e tente novamente.
-        </p>
+        <p className="mt-3 text-sm font-medium text-red-700">{replaceMutation.error.message}</p>
       )}
 
+      {tagsQuery.isError && (
+        <p className="notice-error">
+          Falha ao consultar TAGs.{' '}
+          <button onClick={() => void tagsQuery.refetch()}>Tentar novamente</button>
+        </p>
+      )}
       <div className="mt-4 overflow-auto rounded-2xl border border-slate-200">
         <table className="min-w-[900px] w-full border-collapse bg-white text-left text-sm">
           <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-400">
             <tr>
               <th className="px-3 py-3">Tag</th>
               <th className="px-3 py-3">Descrição</th>
-              <th className="px-3 py-3">Região</th>
+              <th className="px-3 py-3">Região calculada</th>
+              <th className="px-3 py-3">regionId (legado)</th>
               <th className="px-3 py-3">X</th>
               <th className="px-3 py-3">Y</th>
               <th className="px-3 py-3">Z</th>
@@ -208,6 +285,7 @@ export function TagDataManager() {
               <tr className="border-t border-slate-100" key={tag.id}>
                 <td className="px-3 py-3 font-semibold text-slate-950">{tag.tag}</td>
                 <td className="px-3 py-3 text-slate-600">{tag.description}</td>
+                <td className="px-3 py-3 text-slate-600">{resolveRegion(tag, volumes).label}</td>
                 <td className="px-3 py-3 text-slate-600">{tag.regionId}</td>
                 <td className="px-3 py-3 text-slate-600">{tag.x}</td>
                 <td className="px-3 py-3 text-slate-600">{tag.y}</td>

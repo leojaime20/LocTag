@@ -31,11 +31,25 @@ export function TagSummary({ context, isLoading }: TagSummaryProps) {
 
   const fields = [
     ['Descrição', context.tag.description],
-    ['Região', context.region.name],
-    ['X', context.tag.x],
-    ['Y', context.tag.y],
-    ['Z', context.tag.z],
-    ['Status', context.tag.status],
+    [
+      'Região',
+      context.legacyRegion && !context.resolution.region
+        ? `${context.resolution.label} (cadastro legado: ${context.legacyRegion.name})`
+        : context.resolution.label,
+    ],
+    ['X', `${context.tag.x} m`],
+    ['Y', `${context.tag.y} m`],
+    ['Z', `${context.tag.z} m`],
+    [
+      'Altura aproximada',
+      context.resolution.height === null
+        ? ''
+        : `${context.resolution.height.toLocaleString('pt-BR', { maximumFractionDigits: 2, minimumFractionDigits: 1 })} m`,
+    ],
+    [
+      'Status',
+      { active: 'Ativo', inactive: 'Inativo', unknown: 'Desconhecido' }[context.tag.status],
+    ],
     ['Tipo', context.tag.type],
   ];
 
@@ -51,7 +65,7 @@ export function TagSummary({ context, isLoading }: TagSummaryProps) {
         </button>
       </div>
 
-      <dl className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-7">
+      <dl className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
         {fields.map(([label, value]) => (
           <div className="rounded-xl bg-slate-50 px-3 py-2" key={label}>
             <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">

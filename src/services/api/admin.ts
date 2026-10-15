@@ -82,16 +82,24 @@ export async function saveRegion(input: RegionInput): Promise<void> {
 }
 
 function tagDocumentId(tag: EquipmentTag) {
-  return encodeURIComponent((tag.id || tag.tag).trim());
+  return tag.id || encodeURIComponent(tag.tag.trim());
 }
 
 async function commitInChunks(operations: ((batch: ReturnType<typeof writeBatch>) => void)[]) {
   const chunkSize = 450;
 
+  let committed = 0;
   for (let index = 0; index < operations.length; index += chunkSize) {
     const batch = writeBatch(db);
     operations.slice(index, index + chunkSize).forEach((operation) => operation(batch));
-    await batch.commit();
+    try {
+      await batch.commit();
+      committed += Math.min(chunkSize, operations.length - index);
+    } catch {
+      throw new Error(
+        `Importação interrompida: ${committed} operações desta etapa foram confirmadas. Pode haver dados parcialmente atualizados. Confira a tabela, mantenha o CSV original e repita a importação completa.`,
+      );
+    }
   }
 }
 
@@ -108,17 +116,21 @@ export async function replaceAllTags(tags: EquipmentTag[]): Promise<void> {
 
   tags.forEach((tag) => {
     upsertOperations.push((batch) => {
-      batch.set(doc(db, 'tags', tagDocumentId(tag)), {
-        tag: tag.tag,
-        description: tag.description,
-        regionId: tag.regionId,
-        x: tag.x,
-        y: tag.y,
-        z: tag.z,
-        type: tag.type,
-        status: tag.status,
-        updatedAt: serverTimestamp(),
-      });
+      batch.set(
+        doc(db, 'tags', tagDocumentId(tag)),
+        {
+          tag: tag.tag,
+          description: tag.description,
+          regionId: tag.regionId,
+          x: tag.x,
+          y: tag.y,
+          z: tag.z,
+          type: tag.type,
+          status: tag.status,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true },
+      );
     });
   });
 
@@ -128,6 +140,18 @@ export async function replaceAllTags(tags: EquipmentTag[]): Promise<void> {
     }
   });
 
-  await commitInChunks(upsertOperations);
-  await commitInChunks(deleteOperations);
+  // Small replacements are atomic; large imports explicitly report partial failures.
+  if (upsertOperations.length + deleteOperations.length <= 450) {
+    await commitInChunks([...upsertOperations, ...deleteOperations]);
+  } else {
+    await commitInChunks(upsertOperations);
+    try {
+      await commitInChunks(deleteOperations);
+    } catch (error) {
+      throw new Error(
+        `TAGs do CSV gravadas, mas a remoção das ausentes foi interrompida. ${error instanceof Error ? error.message : ''}`,
+        { cause: error },
+      );
+    }
+  }
 }

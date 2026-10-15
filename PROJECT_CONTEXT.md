@@ -170,8 +170,8 @@ O ID do documento deve ser o e-mail completo do usuário.
 
 Campos:
 
-| Campo | Tipo | Significado |
-|---|---|---|
+| Campo  | Tipo   | Significado                                                                                          |
+| ------ | ------ | ---------------------------------------------------------------------------------------------------- |
 | `role` | string | Papel do usuário. O código reconhece `admin`; qualquer outro valor vira `user` na UI administrativa. |
 
 Regras:
@@ -187,31 +187,31 @@ Documento recomendado: `tags/{tagId}`, frequentemente com ID igual à própria T
 
 Campos canônicos:
 
-| Campo | Tipo | Obrigatório no comportamento esperado | Significado |
-|---|---|---:|---|
-| `tag` | string | Sim | Código/texto pesquisável da TAG. Se ausente, o normalizador usa o ID do documento. |
-| `description` | string | Sim | Descrição pesquisável. Se ausente, tenta `descricao`; se também ausente, usa `"Sem descrição"`. |
-| `regionId` | string | Sim | ID da região em `regions`. Se ausente, usa `"default"`. |
-| `x` | number | Sim | Coordenada real X. Usada em planta e lateral. Se ausente, tenta `planta.x`; se ausente, `0`. |
-| `y` | number | Sim | Coordenada real Y da planta. Se ausente, tenta `planta.y`; se ausente, `0`. |
-| `z` | number | Sim | Coordenada real vertical da lateral. Se ausente, tenta `lateral.z`, depois `lateral.y`; se ausente, `0`. |
-| `type` | string | Sim | Tipo/sistema exibido no resumo. Se ausente, tenta `sistema`; se ausente, `"Equipamento"`. |
-| `status` | string | Não | Status da tag. Tipo TypeScript aceita `active`, `inactive` e `unknown`; se ausente, `"unknown"`. |
+| Campo         | Tipo   | Obrigatório no comportamento esperado | Significado                                                                                              |
+| ------------- | ------ | ------------------------------------: | -------------------------------------------------------------------------------------------------------- |
+| `tag`         | string |                                   Sim | Código/texto pesquisável da TAG. Se ausente, o normalizador usa o ID do documento.                       |
+| `description` | string |                                   Sim | Descrição pesquisável. Se ausente, tenta `descricao`; se também ausente, usa `"Sem descrição"`.          |
+| `regionId`    | string |                                   Sim | ID da região em `regions`. Se ausente, usa `"default"`.                                                  |
+| `x`           | number |                                   Sim | Coordenada real X. Usada em planta e lateral. Se ausente, tenta `planta.x`; se ausente, `0`.             |
+| `y`           | number |                                   Sim | Coordenada real Y da planta. Se ausente, tenta `planta.y`; se ausente, `0`.                              |
+| `z`           | number |                                   Sim | Coordenada real vertical da lateral. Se ausente, tenta `lateral.z`, depois `lateral.y`; se ausente, `0`. |
+| `type`        | string |                                   Sim | Tipo/sistema exibido no resumo. Se ausente, tenta `sistema`; se ausente, `"Equipamento"`.                |
+| `status`      | string |                                   Não | Status da tag. Tipo TypeScript aceita `active`, `inactive` e `unknown`; se ausente, `"unknown"`.         |
 
 Campos legados aceitos:
 
-| Campo | Tipo | Uso |
-|---|---|---|
-| `descricao` | string | Alternativa legada para `description` e campo pesquisado. |
-| `sistema` | string | Alternativa legada para `type`. |
-| `deck` | string | Presente no JSON de exemplo, mas não usado pela UI atual. |
-| `area` | string | Presente no JSON de exemplo, mas não usado pela UI atual. |
-| `planta.x` | number | Fallback para `x`. |
-| `planta.y` | number | Fallback para `y`. |
-| `planta.z` | number | Tipado como possível, mas não usado. |
+| Campo       | Tipo   | Uso                                                                                               |
+| ----------- | ------ | ------------------------------------------------------------------------------------------------- |
+| `descricao` | string | Alternativa legada para `description` e campo pesquisado.                                         |
+| `sistema`   | string | Alternativa legada para `type`.                                                                   |
+| `deck`      | string | Presente no JSON de exemplo, mas não usado pela UI atual.                                         |
+| `area`      | string | Presente no JSON de exemplo, mas não usado pela UI atual.                                         |
+| `planta.x`  | number | Fallback para `x`.                                                                                |
+| `planta.y`  | number | Fallback para `y`.                                                                                |
+| `planta.z`  | number | Tipado como possível, mas não usado.                                                              |
 | `lateral.x` | number | Presente no JSON de exemplo, mas o normalizador usa `x` geral ou `planta.x`; não usa `lateral.x`. |
-| `lateral.y` | number | Fallback secundário para `z`. |
-| `lateral.z` | number | Fallback primário para `z`. |
+| `lateral.y` | number | Fallback secundário para `z`.                                                                     |
+| `lateral.z` | number | Fallback primário para `z`.                                                                       |
 
 Leitura/escrita:
 
@@ -224,14 +224,14 @@ Documento: `regions/{regionId}`
 
 Campos:
 
-| Campo | Tipo | Significado |
-|---|---|---|
-| `name` | string | Nome legível da região. |
-| `plantPdf` | string | Caminho no Firebase Storage ou URL HTTP(S) para o PDF da planta. Exemplo: `pdfs/default-planta.pdf`. |
-| `sidePdf` | string | Caminho no Firebase Storage ou URL HTTP(S) para o PDF da lateral. Exemplo: `pdfs/default-lateral.pdf`. |
-| `plantCalibration` | object | Calibração para converter `x/y` reais da tag em coordenadas de marcador na planta. |
-| `sideCalibration` | object | Calibração para converter `x/z` reais da tag em coordenadas de marcador na lateral. |
-| `updatedAt` | timestamp | Atualizado por `saveRegion` com `serverTimestamp()`. |
+| Campo              | Tipo      | Significado                                                                                            |
+| ------------------ | --------- | ------------------------------------------------------------------------------------------------------ |
+| `name`             | string    | Nome legível da região.                                                                                |
+| `plantPdf`         | string    | Caminho no Firebase Storage ou URL HTTP(S) para o PDF da planta. Exemplo: `pdfs/default-planta.pdf`.   |
+| `sidePdf`          | string    | Caminho no Firebase Storage ou URL HTTP(S) para o PDF da lateral. Exemplo: `pdfs/default-lateral.pdf`. |
+| `plantCalibration` | object    | Calibração para converter `x/y` reais da tag em coordenadas de marcador na planta.                     |
+| `sideCalibration`  | object    | Calibração para converter `x/z` reais da tag em coordenadas de marcador na lateral.                    |
+| `updatedAt`        | timestamp | Atualizado por `saveRegion` com `serverTimestamp()`.                                                   |
 
 Se uma região não existir, `getRegion(regionId)` retorna uma região fallback com:
 
@@ -251,24 +251,24 @@ Usado dentro de documentos de região.
 
 Campos:
 
-| Campo | Tipo | Significado |
-|---|---|---|
-| `id` | string | Identificador lógico da calibração. |
-| `pdfId` | string | Identificador lógico do PDF associado. |
-| `points` | array de `CalibrationPoint` | Pontos conhecidos para calcular escala e translação. O editor trabalha com dois pontos. |
-| `scale` | number opcional | Escala fallback se os pontos forem inválidos ou degenerados. |
-| `translateX` | number opcional | Translação adicional em X. |
-| `translateY` | number opcional | Translação adicional em Y. |
-| `rotationDeg` | number opcional | Rotação em graus aplicada após escala. Default prático: `0`. |
+| Campo         | Tipo                        | Significado                                                                             |
+| ------------- | --------------------------- | --------------------------------------------------------------------------------------- |
+| `id`          | string                      | Identificador lógico da calibração.                                                     |
+| `pdfId`       | string                      | Identificador lógico do PDF associado.                                                  |
+| `points`      | array de `CalibrationPoint` | Pontos conhecidos para calcular escala e translação. O editor trabalha com dois pontos. |
+| `scale`       | number opcional             | Escala fallback se os pontos forem inválidos ou degenerados.                            |
+| `translateX`  | number opcional             | Translação adicional em X.                                                              |
+| `translateY`  | number opcional             | Translação adicional em Y.                                                              |
+| `rotationDeg` | number opcional             | Rotação em graus aplicada após escala. Default prático: `0`.                            |
 
 `CalibrationPoint`:
 
-| Campo | Tipo | Significado |
-|---|---|---|
-| `realX` | number | Coordenada X real conhecida. |
+| Campo   | Tipo   | Significado                                                                                                     |
+| ------- | ------ | --------------------------------------------------------------------------------------------------------------- |
+| `realX` | number | Coordenada X real conhecida.                                                                                    |
 | `realY` | number | Coordenada Y real conhecida. Na lateral, representa a coordenada vertical usada pelo app, isto é, o `z` da tag. |
-| `pdfX` | number | Coordenada X correspondente no sistema do marcador/PDF. |
-| `pdfY` | number | Coordenada Y correspondente no sistema do marcador/PDF. |
+| `pdfX`  | number | Coordenada X correspondente no sistema do marcador/PDF.                                                         |
+| `pdfY`  | number | Coordenada Y correspondente no sistema do marcador/PDF.                                                         |
 
 ### Coleção `calibrations`
 
@@ -554,19 +554,19 @@ Regras atuais:
 
 `src/services/firebase/config.ts` lê:
 
-| Variável | Fallback atual |
-|---|---|
-| `VITE_FIREBASE_API_KEY` | `AIzaSyAV6spTj7ssqy9XfyTSTD-Jx2jx7ojeAH4` |
-| `VITE_FIREBASE_AUTH_DOMAIN` | `loctag-p84-p85.firebaseapp.com` |
-| `VITE_FIREBASE_PROJECT_ID` | `loctag-p84-p85` |
-| `VITE_FIREBASE_STORAGE_BUCKET` | `loctag-p84-p85.firebasestorage.app` |
-| `VITE_FIREBASE_MESSAGING_SENDER_ID` | `495538846299` |
-| `VITE_FIREBASE_APP_ID` | `1:495538846299:web:088fcc2cec2de71d2a5d7e` |
+| Variável                            | Fallback atual                              |
+| ----------------------------------- | ------------------------------------------- |
+| `VITE_FIREBASE_API_KEY`             | `AIzaSyAV6spTj7ssqy9XfyTSTD-Jx2jx7ojeAH4`   |
+| `VITE_FIREBASE_AUTH_DOMAIN`         | `loctag-p84-p85.firebaseapp.com`            |
+| `VITE_FIREBASE_PROJECT_ID`          | `loctag-p84-p85`                            |
+| `VITE_FIREBASE_STORAGE_BUCKET`      | `loctag-p84-p85.firebasestorage.app`        |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | `495538846299`                              |
+| `VITE_FIREBASE_APP_ID`              | `1:495538846299:web:088fcc2cec2de71d2a5d7e` |
 
 ### Variáveis de build
 
-| Variável | Uso |
-|---|---|
+| Variável            | Uso                                                    |
+| ------------------- | ------------------------------------------------------ |
 | `GITHUB_PAGES=true` | Faz `vite.config.ts` usar `base: "/LocTag/"` no build. |
 
 ### Firebase Console
@@ -586,14 +586,14 @@ Configurações operacionais citadas:
 
 ### Scripts
 
-| Script | Função |
-|---|---|
-| `npm run dev` | Inicia Vite em desenvolvimento. |
-| `npm run build` | Executa `tsc -b` e `vite build`. |
-| `npm run preview` | Serve build local via Vite preview. |
-| `npm run lint` | Executa ESLint. |
-| `npm run format` | Aplica Prettier. |
-| `npm run format:check` | Verifica formatação. |
+| Script                 | Função                              |
+| ---------------------- | ----------------------------------- |
+| `npm run dev`          | Inicia Vite em desenvolvimento.     |
+| `npm run build`        | Executa `tsc -b` e `vite build`.    |
+| `npm run preview`      | Serve build local via Vite preview. |
+| `npm run lint`         | Executa ESLint.                     |
+| `npm run format`       | Aplica Prettier.                    |
+| `npm run format:check` | Verifica formatação.                |
 
 ## Integrações externas
 

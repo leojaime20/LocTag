@@ -5,20 +5,22 @@ import { AuthStatus } from '../components/AuthStatus';
 import { TagSearch } from '../features/tags/TagSearch';
 import { TagSummary } from '../features/tags/TagSummary';
 import { ViewerWorkspace } from '../features/viewer/ViewerWorkspace';
+import { useAdminProfile } from '../hooks/useAdminProfile';
 import { useAuthUser } from '../hooks/useAuthUser';
 import { useSelectedTagContext } from '../hooks/useSelectedTagContext';
 import type { EquipmentTag } from '../types/domain';
 
 export default function TagLocatorPage() {
   const { user, isReady } = useAuthUser();
+  const adminProfile = useAdminProfile(user);
   const [selectedTag, setSelectedTag] = useState<EquipmentTag | null>(null);
-  const selectedContext = useSelectedTagContext(selectedTag);
+  const selectedContext = useSelectedTagContext(user ? selectedTag : null);
   const selected = selectedContext.data ?? null;
 
   const pageState = useMemo(() => {
     if (!isReady) return 'Verificando acesso...';
     if (!user) return 'Entre com Google para buscar tags no Firestore.';
-    return 'Busque uma tag para carregar região, PDFs e coordenadas.';
+    return 'Busque uma TAG para localizar o equipamento nos desenhos globais.';
   }, [isReady, user]);
 
   return (
@@ -31,7 +33,7 @@ export default function TagLocatorPage() {
           </div>
           <div className="flex flex-col gap-2 md:items-end">
             <AuthStatus user={user} isReady={isReady} />
-            {user?.email === 'leojaime20@gmail.com' && (
+            {adminProfile.data?.role === 'admin' && (
               <Link className="text-sm font-semibold text-blue-600" to="/admin">
                 Administração
               </Link>
@@ -45,6 +47,13 @@ export default function TagLocatorPage() {
         </section>
 
         <TagSummary context={selected} isLoading={selectedContext.isFetching} />
+
+        {selected?.drawings?.exampleRegionId && (
+          <p className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            Exemplo ilustrativo: o desenho e as coordenadas desta TAG demonstram a localização; não
+            representam medições de engenharia.
+          </p>
+        )}
 
         {selectedContext.isError && (
           <section className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">

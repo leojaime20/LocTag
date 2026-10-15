@@ -1,4 +1,4 @@
-import type { Calibration, EquipmentTag, Region, TagStatus } from './domain';
+import type { Calibration, EquipmentTag, Region, RegionBounds, TagStatus } from './domain';
 
 interface LegacyPoint {
   x?: number;
@@ -23,7 +23,8 @@ export interface RawTagDocument {
   lateral?: LegacyPoint;
 }
 
-export interface RawRegionDocument {
+export interface RawRegionDocument extends Partial<RegionBounds> {
+  archived?: boolean;
   name?: string;
   plantPdf?: string;
   sidePdf?: string;
@@ -55,10 +56,10 @@ export function normalizeTag(id: string, data: RawTagDocument): EquipmentTag {
     id,
     tag: data.tag ?? id,
     description: data.description ?? data.descricao ?? 'Sem descrição',
-    regionId: data.regionId ?? 'default',
-    x: data.x ?? data.planta?.x ?? 0,
-    y: data.y ?? data.planta?.y ?? 0,
-    z: data.z ?? data.lateral?.z ?? data.lateral?.y ?? 0,
+    regionId: data.regionId ?? '',
+    x: data.x ?? data.planta?.x ?? NaN,
+    y: data.y ?? data.planta?.y ?? NaN,
+    z: data.z ?? data.lateral?.z ?? data.lateral?.y ?? NaN,
     type: data.type ?? data.sistema ?? 'Equipamento',
     status: data.status ?? 'unknown',
   };
@@ -68,6 +69,13 @@ export function normalizeRegion(id: string, data: RawRegionDocument): Region {
   return {
     id,
     name: data.name ?? fallbackRegion.name,
+    archived: data.archived,
+    xMin: data.xMin,
+    xMax: data.xMax,
+    yMin: data.yMin,
+    yMax: data.yMax,
+    zMin: data.zMin,
+    zMax: data.zMax,
     plantPdf: data.plantPdf ?? '',
     sidePdf: data.sidePdf ?? '',
     plantCalibration: {

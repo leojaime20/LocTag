@@ -1,379 +1,162 @@
-# Guia de Administração: PDFs, Calibração e Tags
+# LocTag 2.0 — configuração e operação
 
-Este guia descreve como cadastrar PDFs técnicos, calibrar coordenadas e inserir tags no LocTag.
+## Acesso
 
-## 1. Acessar a área administrativa
+Entre com Google usando um usuário cadastrado em `authorizedUsers/{email}`. A administração exige `role: "admin"`; o link da interface segue esse papel. As regras do Firestore continuam impondo autorização independentemente da interface.
 
-1. Abra a aplicação publicada:
+Antes de publicar esta versão, publique as regras atualizadas, que acrescentam `settings` e `drawingRevisions`:
 
-```txt
-https://leojaime20.github.io/LocTag/
+```sh
+firebase deploy --only firestore:rules --project loctag-p84-p85
 ```
 
-2. Clique em **Entrar com Google**.
-3. Use o e-mail administrador:
+O deploy e o exemplo de produção são descritos em [exemplo-producao.md](exemplo-producao.md).
 
-```txt
-leojaime20@gmail.com
-```
+## Unidades e referencial
 
-4. Clique em **Administração** no topo da tela.
+O responsável pela base confirmou em 14/10/2026 que X, Y e Z estão em **metros**. Os valores existentes não foram convertidos. Planta usa X/Y; Lateral usa X/Z. Todos os limites de região também são em metros.
 
-Link direto:
+U/V são coordenadas da página exibida pelo Pdfium, em pontos de página (não pixels de tela). A origem é o canto superior esquerdo da área efetiva da página; U cresce para a direita, V para baixo. A rotação nativa e o CropBox do PDF são aplicados pelo Pdfium. O aplicativo abre com `normalizeRotation: false` e renderiza com rotação adicional zero, evitando aplicar a rotação duas vezes. A página escolhida, dimensões e rotação nativa são salvas junto à calibração.
 
-```txt
-https://leojaime20.github.io/LocTag/#/admin
-```
+Calibração, navegação, minimapa e exportação usam o mesmo referencial. A conversão tela/página usa a área efetivamente exibida e o tamanho atual do painel. As tolerâncias dos resíduos são em **pontos PDF**, não em metros ou pixels de tela.
 
-Se a tela informar que seu usuário não tem permissão, confira no Firestore se existe o documento:
+Implementação verificada contra os tipos e o código instalado do EmbedPDF 2.14.4 e sua [documentação de renderPageRect](https://www.embedpdf.com/docs/engines/rendering/render-page-rect). A suíte inclui PDFs com rotações nativas 0°, 90°, 180°, 270° e CropBox deslocado.
 
-```txt
-authorizedUsers/leojaime20@gmail.com
-```
+## Desenhos globais
 
-Com o campo:
+1. Abra **Administração → Desenhos globais**.
+2. Envie o PDF de Planta e o de Lateral. O upload é retomável e exibe progresso. Cada envio cria um caminho único `pdfs/global-{plant|side}-{uuid}.pdf`; não sobrescreve arquivos antigos.
+3. Se quiser reaproveitar um arquivo existente, informe seu caminho `pdfs/…pdf` no Storage. Use arquivos imutáveis: para uma revisão, envie um novo PDF.
+4. Escolha a página do desenho, contando a partir de 1. PDFs com várias páginas são aceitos, mas cada vista utiliza uma única página calibrada.
+5. Calibre cada vista e confira os resíduos.
+6. Ajuste o zoom inicial e o zoom de compartilhamento. São multiplicadores do ajuste ao desenho completo, entre 1× e 32×; valores iniciais sugeridos na interface: 4× e 3×.
+7. Clique em **Salvar desenhos globais**. O par é ativado em uma transação somente se ambos os PDFs e calibrações forem válidos.
 
-```txt
-role = "admin"
-```
+Enquanto o par for apenas um exemplo, marque **Usar estes PDFs apenas na região ilustrativa** e informe a região. Assim, TAGs reais continuam usando seus PDFs regionais. Desmarque quando os desenhos reais completos estiverem calibrados para a base toda.
 
-## 2. Cadastrar ou editar uma região
+O envio por si só não ativa o PDF. Alterar o PDF ou a página limpa os pontos do rascunho para evitar reaproveitar coordenadas incompatíveis. Rascunhos são locais e não sobrevivem ao fechamento/recarregamento da página. Um upload abandonado permanece no Storage e pode ser reaproveitado; não há limpeza automática.
 
-Uma região representa um conjunto de desenhos técnicos. Normalmente ela terá:
+## Calibração multiponto
 
-- um PDF de planta;
-- um PDF de lateral;
-- uma calibração para cada PDF.
+1. Use zoom e arraste para encontrar uma referência conhecida.
+2. Clique em **Adicionar ponto por clique** e clique no desenho.
+3. Preencha X e Y (Planta) ou X e Z (Lateral). U/V são preenchidos pelo clique.
+4. Repita. São necessários ao menos três pontos não colineares; recomenda-se 6 a 10 bem distribuídos, sem limite de quantidade imposto pela interface.
+5. Para reposicionar, selecione P1/P2/etc. e clique novamente. Também é possível editar os quatro valores ou excluir uma referência.
+6. Revise o erro de cada ponto, o erro médio e o RMSE antes de salvar. Pontos acima da tolerância ficam vermelhos na lista e no desenho.
 
-Na tela **Administração**:
+O ajuste afim permite translação, rotação, escalas independentes e cisalhamento. O sistema usa mínimos quadrados com QR e centralização/normalização das coordenadas. Rejeita valores não finitos, referências insuficientes, colinearidade/quase colinearidade, transformação singular e pontos fora da página. Erros elevados são avisos; cabe ao administrador revisar as referências e a tolerância.
 
-1. Em **ID da região**, informe um identificador simples.
+Com exatamente três referências o resíduo pode ser zero mesmo quando um ponto está incorreto. Acrescente referências independentes para avaliar a confiabilidade. Regiões não participam dessa transformação.
 
-Exemplo:
+## Regiões
 
-```txt
-default
-```
+Em **Regiões**, informe ID único, nome e os seis limites. Para cada eixo, mínimo < máximo. O ID deve ser válido para o Firestore: não vazio, sem `/`, com até 1500 bytes e sem nomes reservados. Documentos legados sem limites aparecem para edição e não participam da identificação espacial.
 
-ou:
+A interface detecta sobreposição parcial, contenção total e contato de fronteira. Contatos por face, aresta ou ponto podem produzir ambiguidade porque os limites são inclusivos. Para salvar conflitos, é necessário marcar que os limites foram revisados. Qualquer alteração nos valores ou conflitos exige novo reconhecimento. A criação verifica IDs existentes em transação, inclusive os arquivados.
 
-```txt
-modulo-01
-```
+**Excluir** retira a região da identificação após confirmação e marca `archived: true`, preservando o documento e campos legados. **Restaurar / editar**, seguido de salvar, reativa a região. Nenhum PDF é apagado.
 
-2. Em **Nome da região**, informe um nome legível.
+## Identificação e altura
 
-Exemplo:
+As regiões são carregadas em cache compartilhado e acompanhadas em tempo real. Para cada TAG:
 
-```txt
-P84/85 Hull - Módulo 01
-```
+- Uma região contendo X/Y/Z: é usada.
+- Nenhuma: mostra **Região não identificada**.
+- Várias: `regionId` só desempata se corresponder a uma das regiões contendo a TAG. Sem esse desempate, mostra **Região ambígua** e os nomes.
 
-3. Se estiver editando uma região existente, aguarde os dados carregarem.
+A região efetiva é sempre calculada em memória. O sistema nunca atualiza `regionId` automaticamente. Mudanças na TAG selecionada ou nas regiões recalculam os resultados.
 
-## 3. Subir os PDFs
+**Altura aproximada** = Z da TAG − Z mínimo da região resolvida. O campo fica vazio quando não há região válida ou há ambiguidade. Zero é exibido apenas quando Z coincide com o limite inferior. É a distância da coordenada de referência da TAG ao limite inferior cadastrado, não a altura física do equipamento nem uma medição de piso irregular.
 
-Na seção de upload:
+## Navegação e compartilhamento
 
-1. Em **PDF Planta**, selecione o arquivo PDF da planta.
-2. Em **PDF Lateral**, selecione o arquivo PDF da vista lateral.
-3. Aguarde o envio terminar.
+Ao alternar a TAG, as vistas recalculam e centralizam a posição sem reabrir PDFs cujos caminhos/páginas continuam iguais. Os controles são independentes. Use arraste (inclusive toque), botões de zoom, setas do teclado, **Centralizar TAG**, **Desenho completo** e **Tela cheia** (conforme suporte do navegador).
 
-O sistema salva os PDFs no Firebase Storage com este padrão:
+O minimapa mostra uma miniatura, a TAG e o retângulo visível. Clique ou arraste para navegar. Pode ser recolhido e fica compacto em celulares. As abas Planta/Lateral mantêm ambos os documentos montados.
 
-```txt
-pdfs/{regionId}-planta.pdf
-pdfs/{regionId}-lateral.pdf
-```
+**Compartilhar** gera uma prévia PNG com dados da TAG e dois recortes, com zoom próprio e marcadores. A imagem não captura menus ou controles. O download está sempre disponível; **Compartilhar imagem** aparece quando o navegador suporta Web Share com arquivos. Cancelar o compartilhamento nativo não é um erro. Em caso de falha, revise a mensagem e tente novamente.
 
-Exemplo para `regionId = default`:
+A exportação exige os dois desenhos carregados, calibrações afins válidas, metadados de página compatíveis e a TAG dentro das páginas. A imagem é gerada localmente; não altera permissões do Storage ou Firestore.
 
-```txt
-pdfs/default-planta.pdf
-pdfs/default-lateral.pdf
-```
+## TAGs e CSV
 
-Depois do upload, clique em **Salvar região** para gravar os caminhos no Firestore.
+A busca principal continua iniciando em dois caracteres, com consultas limitadas por prefixo em `tag`, `description` e `descricao`. Não lê a coleção inteira. A busca legada é por prefixo, não uma pesquisa textual arbitrária no meio de qualquer frase. A tabela administrativa mantém sua leitura completa para filtragem e exportação, exibindo até 200 registros.
 
-## 4. Calibrar a planta
+Em **TAGs e dados CSV** há filtro, exportação dos dados atuais e modelo. A tabela distingue região calculada de `regionId` legado. Campos legados `descricao`, `sistema`, `planta` e `lateral` continuam reconhecidos na leitura.
 
-A calibração converte coordenadas reais da tag para a posição correta no PDF.
-
-Na seção **Calibração da planta**, preencha dois pontos conhecidos. O modo recomendado é:
-
-1. Selecione **P1**.
-2. Digite `P1 real X` e `P1 real Y` com os valores reais vindos do 3D/projeto.
-3. Clique no mesmo ponto dentro do PDF exibido abaixo dos campos.
-4. O sistema preencherá `P1 PDF X` e `P1 PDF Y`.
-5. Repita o processo para **P2**.
-
-Cada ponto tem:
-
-```txt
-realX
-realY
-pdfX
-pdfY
-```
-
-Significado:
-
-- `realX`: coordenada X real do projeto.
-- `realY`: coordenada Y real do projeto.
-- `pdfX`: posição X correspondente dentro do PDF.
-- `pdfY`: posição Y correspondente dentro do PDF.
-
-Exemplo simples para PDFs gerados em escala 1000 x 500:
-
-```txt
-P1 real X = 0
-P1 real Y = 0
-P1 PDF X  = 0
-P1 PDF Y  = 0
-
-P2 real X = 1000
-P2 real Y = 500
-P2 PDF X  = 1000
-P2 PDF Y  = 500
-```
-
-Se o PDF real tiver outra escala, use dois pontos conhecidos do desenho.
-
-Exemplo:
-
-```txt
-P1 real X = 120
-P1 real Y = 40
-P1 PDF X  = 82
-P1 PDF Y  = 318
-
-P2 real X = 850
-P2 real Y = 430
-P2 PDF X  = 906
-P2 PDF Y  = 94
-```
-
-## 5. Calibrar a lateral
-
-Na vista lateral, a aplicação usa:
-
-```txt
-X real da tag
-Z real da tag
-```
-
-Ou seja:
-
-- na planta: usa `x` e `y`;
-- na lateral: usa `x` e `z`.
-
-Na seção **Calibração da lateral**, preencha:
-
-```txt
-realX
-realY
-pdfX
-pdfY
-```
-
-Mas aqui o campo `realY` representa a coordenada vertical usada na lateral, ou seja, o `z` da tag. Na interface, esse campo aparece como **real Z**.
-
-O modo recomendado também é clicar no PDF:
-
-1. Selecione **P1**.
-2. Digite `P1 real X` e `P1 real Z`.
-3. Clique no mesmo ponto na vista lateral.
-4. Repita para **P2**.
-
-Exemplo:
-
-```txt
-P1 real X = 0
-P1 real Y = 0
-P1 PDF X  = 0
-P1 PDF Y  = 500
-
-P2 real X = 1000
-P2 real Y = 500
-P2 PDF X  = 1000
-P2 PDF Y  = 0
-```
-
-Use esse padrão quando a cota vertical cresce para cima, mas o PDF cresce para baixo.
-
-## 6. Salvar a região
-
-Depois de subir PDFs e ajustar calibração:
-
-1. Clique em **Salvar região**.
-2. Aguarde a mensagem **Região salva**.
-3. Volte para a busca.
-4. Selecione uma tag dessa região e confira o marcador.
-
-## 7. Gerenciar tags pela área administrativa
-
-Na seção **Tabela de tags** da área administrativa, você pode:
-
-- ver os dados atuais da coleção `tags`;
-- filtrar a tabela por tag, descrição, região, tipo ou status;
-- baixar um arquivo modelo;
-- baixar os dados atuais;
-- importar um CSV validado;
-- substituir a coleção inteira após revisar a prévia.
-
-Fluxo recomendado:
-
-1. Clique em **Baixar dados atuais** se já existirem tags cadastradas.
-2. Se ainda não houver dados, clique em **Baixar modelo**.
-3. Abra o arquivo no Excel, Google Sheets ou Numbers.
-4. Mantenha as colunas do padrão.
-5. Edite ou adicione as tags.
-6. Exporte/salve a planilha como CSV.
-7. Clique em **Importar CSV**.
-8. Revise a prévia e os erros, se houver.
-9. Clique em **Confirmar e substituir tabela**.
-
-Colunas obrigatórias:
-
-```txt
-tag,description,regionId,x,y,z,type,status
-```
-
-A coluna `id` é opcional. Se ela não existir, o sistema usa a própria `tag` como ID do documento.
-
-Formato recomendado:
+Formato (ordem das colunas pode variar):
 
 ```csv
 id,tag,description,regionId,x,y,z,type,status
-P-101A,P-101A,Bomba de drenagem,default,420,280,380,Processo,active
-V-201,V-201,Separador trifásico,default,580,260,320,Processo,active
+P-101A,P-101A,"Bomba de água, circuito principal",engine-first,150,75,15,Pump,active
+P-102,P-102,Bomba reserva,,170,70,16,Pump,inactive
 ```
 
-O importador aceita CSV separado por vírgula, ponto e vírgula ou tabulação. Arquivos `.xlsx` devem ser exportados como `.csv` antes do envio.
+- Cabeçalhos obrigatórios: `tag,description,regionId,x,y,z,type,status`.
+- `id` é opcional; preservado quando exportado. Quando ausente, é derivado da TAG com codificação para ID Firestore. IDs existentes não são recodificados.
+- `regionId` pode ficar vazio; não substitui o cálculo espacial.
+- X/Y/Z são obrigatórios e finitos, com ponto decimal. Valores vazios não viram zero.
+- Status aceitos: `active`, `inactive`, `unknown`. Outros valores são erros.
+- São aceitos vírgula, ponto e vírgula e tabulação, BOM, acentos, aspas escapadas e quebras de linha dentro de campos entre aspas. Cabeçalhos `descricao`/`sistema` podem representar `description`/`type`.
+- Cabeçalhos/IDs/TAGs duplicados, aspas malformadas e quantidade incorreta de colunas são rejeitados.
+- A prévia mostra contagens, primeiras 20 linhas válidas e erros com número de linha. Havendo qualquer erro, não permite confirmar nenhuma linha.
 
-Validações feitas antes da substituição:
+**Confirmar e substituir tabela** mantém a estratégia anterior: atualiza as TAGs do arquivo e remove as que estiverem ausentes. Nenhuma escrita acontece antes desse clique. Campos legados/extra dos documentos mantidos são preservados por merge. Exporte os dados atuais antes de confirmar uma substituição.
 
-- colunas obrigatórias presentes;
-- `tag`, `description` e `regionId` preenchidos;
-- tags duplicadas bloqueadas;
-- `x`, `y` e `z` numéricos;
-- `status` padronizado como `active`, `inactive` ou `unknown`.
+Até 450 operações, a substituição é atômica. Acima disso, usa lotes e pode ser interrompida por falha de rede/permissão: o erro informa a etapa e as operações confirmadas; a tabela é recarregada. A remoção só começa após gravar todas as TAGs do CSV. Corrija o problema, confira a base e repita o arquivo completo. Não há promessa de atomicidade entre lotes grandes.
 
-Importante: ao confirmar, a coleção `tags` é sobrescrita. Tags que não estiverem no CSV serão removidas.
+## Modelo de dados e migração reversível
 
-## 8. Inserir tags manualmente no Firestore
+Documento novo `settings/globalDrawings`:
 
-As tags ficam na coleção:
-
-```txt
-tags
+```ts
+{
+  version: 2,
+  units: 'm',
+  initialZoom: 4,
+  shareZoom: 3,
+  plant: {
+    path: 'pdfs/global-plant-UUID.pdf',
+    pageIndex: 0,
+    page: { width: 2400, height: 1600, rotation: 0 },
+    calibration: {
+      id: 'global-plant', pdfId: 'pdfs/global-plant-UUID.pdf',
+      model: 'affine', tolerance: 3,
+      points: [{ realX: 0, realY: 0, pdfX: 100, pdfY: 200 } /* mínimo 3 */]
+    }
+  },
+  side: { /* mesmo formato; realY representa Z */ },
+  updatedAt: Timestamp
+}
 ```
 
-Cada documento pode ter o ID igual à própria tag.
+Os parâmetros do ajuste são derivados dos pontos, evitando duas fontes de verdade. `rotation` segue o enum do EmbedPDF: 0, 1, 2, 3 para 0°, 90°, 180°, 270°.
 
-Exemplo de documento:
+`regions/{id}` recebe `name,xMin,xMax,yMin,yMax,zMin,zMax,archived,updatedAt`. Os campos regionais antigos `plantPdf`, `sidePdf`, `plantCalibration` e `sideCalibration` são preservados por merge. As novas regiões não recebem PDFs individuais. TAGs mantêm o modelo existente; região efetiva e altura não são persistidas.
 
-```txt
-tags/P-101A
+Migração:
+
+1. Faça backup/exportação dos dados atuais; não altere seus arquivos regionais.
+2. Publique as regras novas e a aplicação.
+3. Sem `settings/globalDrawings`, ou fora da região ilustrativa enquanto `exampleRegionId` estiver ativo, a busca ainda pode abrir os desenhos/calibrações regionais legados indicados pelo `regionId`.
+4. Cadastre os limites XYZ das regiões e configure os dois desenhos globais.
+5. Calibre, salve e verifique TAGs conhecidas distribuídas pelas duas páginas. A presença do documento global ativa o novo fluxo para todas as TAGs.
+
+Cada atualização posterior arquiva a configuração anterior em `drawingRevisions/{id}` na mesma transação. Para reverter uma configuração, copie seus campos de uma revisão para `settings/globalDrawings` no Console Firebase (sem `archivedAt`), mantendo todos os arquivos. Para voltar à transição regional, faça backup da configuração global e remova **apenas** `settings/globalDrawings` de forma explícita. Os documentos e PDFs regionais permanecem intactos. Não há migração em massa nem exclusão automática de dados antigos.
+
+## Desempenho, testes e limites
+
+O Pdfium roda em worker e usa WASM empacotado com a aplicação. Renderizamos somente o recorte visível, com atualização adiada durante movimentos rápidos, DPR até 2 e orçamento aproximado de seis milhões de pixels por quadro. A miniatura é gerada uma vez por documento/página, com dimensão alvo de até 360 px. URLs de imagens e documentos são liberados ao desmontar.
+
+O carregamento usa `full-fetch`, como a implementação anterior: o arquivo precisa caber na memória disponível, além da memória de trabalho do Pdfium. A renderização por recorte evita bitmaps do desenho inteiro em alta resolução, mas não elimina o custo de baixar/analisar PDFs grandes. Valide arquivos industriais representativos em celulares antes da publicação operacional.
+
+```sh
+npm ci
+npx playwright install chromium
+npm test
+npm run lint
+npm run build
 ```
 
-Campos obrigatórios:
-
-```txt
-tag: "P-101A"
-description: "Bomba de drenagem"
-regionId: "default"
-x: 420
-y: 280
-z: 380
-type: "Processo"
-status: "active"
-```
-
-Regras importantes:
-
-- `regionId` deve ser igual ao ID cadastrado na área admin.
-- `x` e `y` posicionam o marcador na planta.
-- `x` e `z` posicionam o marcador na lateral.
-- `tag` é o texto pesquisado pelo usuário.
-- `description` também entra na busca.
-
-## 9. Inserir tags manualmente pelo Console Firebase
-
-1. Abra o Firebase Console.
-2. Vá em **Firestore Database**.
-3. Abra a coleção `tags`.
-4. Clique em **Add document**.
-5. Use como Document ID o nome da tag.
-
-Exemplo:
-
-```txt
-P-101A
-```
-
-6. Adicione os campos:
-
-| Campo         | Tipo   | Exemplo             |
-| ------------- | ------ | ------------------- |
-| `tag`         | string | `P-101A`            |
-| `description` | string | `Bomba de drenagem` |
-| `regionId`    | string | `default`           |
-| `x`           | number | `420`               |
-| `y`           | number | `280`               |
-| `z`           | number | `380`               |
-| `type`        | string | `Processo`          |
-| `status`      | string | `active`            |
-
-7. Salve.
-
-## 10. Inserir muitas tags
-
-Para milhares de tags, não cadastre manualmente uma por uma.
-
-Recomendação:
-
-1. Preparar uma planilha CSV com colunas:
-
-```txt
-tag,description,regionId,x,y,z,type,status
-```
-
-2. Usar a seção **Tabela de tags** da área administrativa para importar.
-
-Formato recomendado:
-
-```csv
-tag,description,regionId,x,y,z,type,status
-P-101A,Bomba de drenagem,default,420,280,380,Processo,active
-V-201,Separador trifásico,default,580,260,320,Processo,active
-```
-
-## 11. Validar se está correto
-
-Depois de cadastrar:
-
-1. Abra a tela principal.
-2. Pesquise a tag.
-3. Clique no resultado.
-4. Verifique:
-
-- resumo carregou;
-- região está correta;
-- PDF de planta abriu;
-- PDF lateral abriu;
-- marcador aparece na planta;
-- marcador aparece na lateral.
-
-Se o PDF não abrir:
-
-- confirme que o arquivo está no Firebase Storage em `pdfs/`;
-- confirme que o caminho salvo em `regions/{regionId}` está correto;
-- confirme que as regras de Storage foram publicadas;
-- faça refresh forte no navegador.
-
-Se o marcador aparecer deslocado:
-
-- revise os pontos de calibração da região;
-- confirme se a tag está com `x`, `y`, `z` corretos;
-- lembre que a lateral usa `x` e `z`.
+Os testes exercitam ajuste afim, degenerações, região/altura, conflitos, CSV, transformações de navegação e um PDF real no Chromium. A fixture local em `tests/fixtures/viewer.html` é apenas de desenvolvimento e não integra o build de produção. Autenticação Google, regras publicadas e desempenho com os PDFs reais exigem uma verificação no ambiente Firebase autorizado.

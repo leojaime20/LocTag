@@ -27,6 +27,15 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    match /settings/{settingId} {
+      allow read: if isAuthorized();
+      allow write: if isAdmin();
+    }
+
+    match /drawingRevisions/{revisionId} {
+      allow read, write: if isAdmin();
+    }
+
     match /authorizedUsers/{email} {
       allow read: if request.auth != null && request.auth.token.email == email;
       allow write: if isAdmin();

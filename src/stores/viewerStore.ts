@@ -1,67 +1,15 @@
 import { create } from 'zustand';
-
 import type { ViewKind } from '../types/domain';
-
-interface ViewState {
-  zoom: number;
-  panX: number;
-  panY: number;
-}
-
+import type { Camera } from '../utils/viewport';
 interface ViewerStore {
   activeMobileView: ViewKind;
-  views: Record<ViewKind, ViewState>;
+  views: Record<ViewKind, Camera>;
   setActiveMobileView: (view: ViewKind) => void;
-  setZoom: (view: ViewKind, zoom: number) => void;
-  zoomIn: (view: ViewKind) => void;
-  zoomOut: (view: ViewKind) => void;
-  reset: (view: ViewKind, zoom?: number) => void;
-  centerMarker: (view: ViewKind) => void;
+  setCamera: (view: ViewKind, camera: Camera) => void;
 }
-
-const minZoom = 0.35;
-const maxZoom = 3;
-
-const defaultView: ViewState = {
-  zoom: 1,
-  panX: 0,
-  panY: 0,
-};
-
 export const useViewerStore = create<ViewerStore>((set) => ({
   activeMobileView: 'plant',
-  views: {
-    plant: { ...defaultView },
-    side: { ...defaultView },
-  },
+  views: { plant: { zoom: 1, centerX: 0, centerY: 0 }, side: { zoom: 1, centerX: 0, centerY: 0 } },
   setActiveMobileView: (view) => set({ activeMobileView: view }),
-  setZoom: (view, zoom) =>
-    set((state) => ({
-      views: {
-        ...state.views,
-        [view]: { ...state.views[view], zoom: Math.min(Math.max(zoom, minZoom), maxZoom) },
-      },
-    })),
-  zoomIn: (view) =>
-    set((state) => ({
-      views: {
-        ...state.views,
-        [view]: { ...state.views[view], zoom: Math.min(state.views[view].zoom + 0.15, maxZoom) },
-      },
-    })),
-  zoomOut: (view) =>
-    set((state) => ({
-      views: {
-        ...state.views,
-        [view]: { ...state.views[view], zoom: Math.max(state.views[view].zoom - 0.15, minZoom) },
-      },
-    })),
-  reset: (view, zoom = defaultView.zoom) =>
-    set((state) => ({
-      views: { ...state.views, [view]: { ...defaultView, zoom } },
-    })),
-  centerMarker: (view) =>
-    set((state) => ({
-      views: { ...state.views, [view]: { ...state.views[view], panX: 0, panY: 0 } },
-    })),
+  setCamera: (view, camera) => set((state) => ({ views: { ...state.views, [view]: camera } })),
 }));

@@ -1,47 +1,28 @@
-import type { ViewKind } from '../../types/domain';
-import { useViewerStore } from '../../stores/viewerStore';
-
-interface ViewerControlsProps {
-  view: ViewKind;
+interface Props {
+  zoom: number;
+  onZoom: (zoom: number) => void;
+  onFit: () => void;
+  onCenter: () => void;
   onFullscreen: () => void;
-  resetZoom?: number;
+  hasMarker: boolean;
 }
-
-export function ViewerControls({ view, onFullscreen, resetZoom = 1 }: ViewerControlsProps) {
-  const zoom = useViewerStore((state) => state.views[view].zoom);
-  const zoomIn = useViewerStore((state) => state.zoomIn);
-  const zoomOut = useViewerStore((state) => state.zoomOut);
-  const reset = useViewerStore((state) => state.reset);
-  const centerMarker = useViewerStore((state) => state.centerMarker);
-
+export function ViewerControls({ zoom, onZoom, onFit, onCenter, onFullscreen, hasMarker }: Props) {
   return (
     <div className="viewer-controls">
-      <button
-        className="icon-button"
-        type="button"
-        onClick={() => zoomOut(view)}
-        aria-label="Zoom -"
-      >
-        -
+      <button className="icon-button" aria-label="Diminuir zoom" onClick={() => onZoom(zoom / 1.4)}>
+        −
       </button>
-      <span className="min-w-12 text-center text-xs font-semibold text-slate-500">
-        {Math.round(zoom * 100)}%
-      </span>
-      <button
-        className="icon-button"
-        type="button"
-        onClick={() => zoomIn(view)}
-        aria-label="Zoom +"
-      >
+      <span className="text-xs whitespace-nowrap">{zoom.toFixed(1)}×</span>
+      <button className="icon-button" aria-label="Aumentar zoom" onClick={() => onZoom(zoom * 1.4)}>
         +
       </button>
-      <button className="control-button" type="button" onClick={() => reset(view, resetZoom)}>
-        Reset
+      <button className="control-button" onClick={onFit}>
+        Desenho completo
       </button>
-      <button className="control-button" type="button" onClick={() => centerMarker(view)}>
-        Centralizar
+      <button className="control-button" disabled={!hasMarker} onClick={onCenter}>
+        Centralizar TAG
       </button>
-      <button className="control-button" type="button" onClick={onFullscreen}>
+      <button className="control-button" onClick={onFullscreen}>
         Tela cheia
       </button>
     </div>

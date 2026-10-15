@@ -3,6 +3,8 @@ import type { EquipmentTag, TagStatus } from '../types/domain';
 export interface CsvParseResult {
   rows: Record<string, string>[];
   errors: string[];
+  lineNumbers: number[];
+  invalidCount: number;
 }
 
 const requiredColumns = [
@@ -56,82 +58,145 @@ function detectDelimiter(headerLine: string) {
 }
 
 export function parseCsv(text: string): CsvParseResult {
-  const normalized = text
-    .replace(/^\uFEFF/, '')
-    .replace(/\r\n/g, '\n')
-    .replace(/\r/g, '\n')
-    .trim();
-  if (!normalized) return { rows: [], errors: ['O arquivo CSV está vazio.'] };
-
-  const [headerLine, ...lines] = normalized.split('\n').filter((line) => line.trim().length > 0);
-  const delimiter = detectDelimiter(headerLine);
-  const headers = parseLine(headerLine, delimiter).map((header) => header.trim());
-  const missingColumns = requiredColumns.filter((column) => !headers.includes(column));
-
-  if (missingColumns.length > 0) {
-    return {
-      rows: [],
-      errors: [`Colunas obrigatórias ausentes: ${missingColumns.join(', ')}.`],
-    };
+  const normalized = text.replace(/^\uFEFF/, '');
+  if (!normalized.trim())
+    return { rows: [], errors: ['O arquivo CSV está vazio.'], lineNumbers: [], invalidCount: 0 };
+  const delimiter = detectDelimiter(normalized.split(/\r?\n/)[0]);
+  const records: { cells: string[]; line: number; invalid: boolean }[] = [];
+  const errors: string[] = [];
+  let cells: string[] = [],
+    value = '',
+    quoted = false,
+    closed = false,
+    line = 1,
+    startLine = 1,
+    invalid = false;
+  const pushCell = () => {
+    cells.push(value);
+    value = '';
+    closed = false;
+  };
+  const pushRecord = () => {
+    pushCell();
+    if (cells.some((v) => v.trim()) || cells.length > 1)
+      records.push({ cells, line: startLine, invalid });
+    cells = [];
+    invalid = false;
+    startLine = line + 1;
+  };
+  for (let i = 0; i < normalized.length; i++) {
+    const c = normalized[i];
+    if (quoted) {
+      if (c === '"' && normalized[i + 1] === '"') {
+        value += '"';
+        i++;
+      } else if (c === '"') {
+        quoted = false;
+        closed = true;
+      } else {
+        value += c;
+        if (c === '\n') line++;
+      }
+    } else if (c === delimiter) {
+      pushCell();
+    } else if (c === '\n' || c === '\r') {
+      if (c === '\r' && normalized[i + 1] === '\n') i++;
+      pushRecord();
+      line++;
+      startLine = line;
+    } else if (c === '"' && value === '' && !closed) {
+      quoted = true;
+    } else if (c === '"' || (closed && c.trim())) {
+      invalid = true;
+      value += c;
+    } else if (!closed) value += c;
   }
-
-  const rows = lines.map((line) => {
-    const cells = parseLine(line, delimiter);
-    return Object.fromEntries(headers.map((header, index) => [header, cells[index] ?? '']));
-  });
-
-  return { rows, errors: [] };
+  if (quoted) {
+    invalid = true;
+    errors.push(`Linha ${startLine}: aspas não fechadas.`);
+  }
+  if (value || cells.length || closed || quoted) pushRecord();
+  const header = records.shift();
+  if (!header)
+    return { rows: [], errors: ['Cabeçalho ausente.'], lineNumbers: [], invalidCount: 0 };
+  const headers = header.cells.map((h) =>
+    h.trim() === 'descricao' ? 'description' : h.trim() === 'sistema' ? 'type' : h.trim(),
+  );
+  const missing = requiredColumns.filter((c) => !headers.includes(c));
+  if (missing.length) errors.push(`Colunas obrigatórias ausentes: ${missing.join(', ')}.`);
+  if (new Set(headers).size !== headers.length || headers.some((h) => !h))
+    errors.push('Cabeçalhos vazios ou duplicados.');
+  if (header.invalid) errors.push('Cabeçalho CSV malformado.');
+  const rows: Record<string, string>[] = [];
+  const lineNumbers: number[] = [];
+  let invalidCount = 0;
+  for (const record of records) {
+    if (record.invalid || record.cells.length !== headers.length) {
+      invalidCount++;
+      errors.push(
+        `Linha ${record.line}: ${record.invalid ? 'aspas inválidas' : 'quantidade de colunas diferente do cabeçalho'}.`,
+      );
+      continue;
+    }
+    rows.push(Object.fromEntries(headers.map((h, i) => [h, record.cells[i]])));
+    lineNumbers.push(record.line);
+  }
+  if (!records.length) errors.push('O CSV não contém registros.');
+  return { rows, errors, lineNumbers, invalidCount };
 }
 
 function toNumber(value: string, rowIndex: number, column: string, errors: string[]) {
   const parsed = Number(value);
-  if (!Number.isFinite(parsed)) {
-    errors.push(`Linha ${rowIndex}: campo ${column} deve ser numérico.`);
-    return 0;
+  if (value == null || value.trim() === '' || !Number.isFinite(parsed)) {
+    errors.push(`Linha ${rowIndex}: campo ${column} deve ser numérico e preenchido.`);
+    return NaN;
   }
   return parsed;
 }
 
-function normalizeStatus(value: string): TagStatus {
-  if (value === 'active' || value === 'inactive' || value === 'unknown') return value;
-  return 'unknown';
-}
-
-export function validateTagRows(rows: Record<string, string>[]) {
+export function validateTagRows(rows: Record<string, string>[], lineNumbers?: number[]) {
   const errors: string[] = [];
-  const seenTags = new Set<string>();
-
-  const tags = rows.map((row, index): EquipmentTag => {
-    const rowNumber = index + 2;
-    const tag = row.tag?.trim();
-    const description = row.description?.trim();
-    const regionId = row.regionId?.trim();
-
+  const seenTags = new Set<string>(),
+    seenIds = new Set<string>();
+  let invalidCount = 0;
+  const tags: EquipmentTag[] = [];
+  rows.forEach((row, index) => {
+    const rowNumber = lineNumbers?.[index] ?? index + 2,
+      before = errors.length;
+    const tag = row.tag?.trim() ?? '',
+      description = row.description ?? '';
+    const id = row.id?.trim() || encodeURIComponent(tag);
     if (!tag) errors.push(`Linha ${rowNumber}: tag é obrigatória.`);
-    if (!description) errors.push(`Linha ${rowNumber}: description é obrigatório.`);
-    if (!regionId) errors.push(`Linha ${rowNumber}: regionId é obrigatório.`);
-    if (tag && seenTags.has(tag)) errors.push(`Linha ${rowNumber}: tag duplicada (${tag}).`);
-    if (tag) seenTags.add(tag);
-
-    return {
-      id: row.id?.trim() || tag || `linha-${rowNumber}`,
-      tag: tag || '',
-      description: description || '',
-      regionId: regionId || '',
+    if (!description.trim()) errors.push(`Linha ${rowNumber}: description é obrigatório.`);
+    if (seenTags.has(tag)) errors.push(`Linha ${rowNumber}: tag duplicada (${tag}).`);
+    if (seenIds.has(id)) errors.push(`Linha ${rowNumber}: ID duplicado (${id}).`);
+    if (id.includes('/') || id === '.' || id === '..' || new TextEncoder().encode(id).length > 1500)
+      errors.push(`Linha ${rowNumber}: ID inválido para o Firestore.`);
+    seenTags.add(tag);
+    seenIds.add(id);
+    const status = row.status?.trim();
+    if (!['active', 'inactive', 'unknown'].includes(status))
+      errors.push(`Linha ${rowNumber}: status deve ser active, inactive ou unknown.`);
+    const result: EquipmentTag = {
+      id,
+      tag,
+      description,
+      regionId: row.regionId?.trim() ?? '',
       x: toNumber(row.x, rowNumber, 'x', errors),
       y: toNumber(row.y, rowNumber, 'y', errors),
       z: toNumber(row.z, rowNumber, 'z', errors),
-      type: row.type?.trim() || 'Equipamento',
-      status: normalizeStatus(row.status?.trim() ?? 'unknown'),
+      type: row.type ?? '',
+      status: status as TagStatus,
     };
+    if (errors.length > before) invalidCount++;
+    else tags.push(result);
   });
-
-  return { tags, errors };
+  return { tags, errors, invalidCount };
 }
 
 function escapeCsv(value: string | number) {
   const stringValue = String(value);
-  if (!/[",\n]/.test(stringValue)) return stringValue;
+  if (!/[",;\t\r\n]/.test(stringValue)) return stringValue;
   return `"${stringValue.replace(/"/g, '""')}"`;
 }
 

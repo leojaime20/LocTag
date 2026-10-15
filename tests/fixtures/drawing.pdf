@@ -1,0 +1,83 @@
+%PDF-1.7
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R 4 0 R 5 0 R 6 0 R 9 0 R] /Count 5 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 800 600] /Rotate 0 /Resources << /Font << /F1 7 0 R >> >> /Contents 8 0 R >>
+endobj
+4 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 800 600] /Rotate 90 /Resources << /Font << /F1 7 0 R >> >> /Contents 8 0 R >>
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 800 600] /Rotate 180 /Resources << /Font << /F1 7 0 R >> >> /Contents 8 0 R >>
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 800 600] /Rotate 270 /Resources << /Font << /F1 7 0 R >> >> /Contents 8 0 R >>
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+8 0 obj
+<< /Length 754 >>
+stream
+q
+1 1 1 rg 0 0 800 600 re f
+0.8 0.85 0.8 RG 1 w
+0 0 m 0 600 l S
+50 0 m 50 600 l S
+100 0 m 100 600 l S
+150 0 m 150 600 l S
+200 0 m 200 600 l S
+250 0 m 250 600 l S
+300 0 m 300 600 l S
+350 0 m 350 600 l S
+400 0 m 400 600 l S
+450 0 m 450 600 l S
+500 0 m 500 600 l S
+550 0 m 550 600 l S
+600 0 m 600 600 l S
+650 0 m 650 600 l S
+700 0 m 700 600 l S
+750 0 m 750 600 l S
+800 0 m 800 600 l S
+0 0 m 800 0 l S
+0 50 m 800 50 l S
+0 100 m 800 100 l S
+0 150 m 800 150 l S
+0 200 m 800 200 l S
+0 250 m 800 250 l S
+0 300 m 800 300 l S
+0 350 m 800 350 l S
+0 400 m 800 400 l S
+0 450 m 800 450 l S
+0 500 m 800 500 l S
+0 550 m 800 550 l S
+0 600 m 800 600 l S
+1 0 0 rg 180 380 40 40 re f
+0 0 1 rg 580 180 40 40 re f
+0 0 0 rg BT /F1 24 Tf 210 450 Td (P-101A - Reference) Tj ET
+Q
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 800 600] /CropBox [100 100 700 500] /Resources << /Font << /F1 7 0 R >> >> /Contents 8 0 R >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000139 00000 n 
+0000000275 00000 n 
+0000000412 00000 n 
+0000000550 00000 n 
+0000000688 00000 n 
+0000000758 00000 n 
+0000001562 00000 n 
+trailer << /Size 10 /Root 1 0 R >>
+startxref
+1715
+%%EOF

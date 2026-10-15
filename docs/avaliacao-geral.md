@@ -40,15 +40,15 @@ Ainda assim, há riscos importantes de segurança, calibração e importação e
 
 ### Visão das camadas
 
-| Camada | Papel |
-|---|---|
-| Bootstrap/routing | `main.tsx` (QueryClient + HashRouter), `App.tsx` (lazy routes) |
-| Pages | `TagLocatorPage`, `AdminPage` — orquestração e estado de página |
-| Features | `tags`, `viewer`, `admin` — fronteira UI mais forte |
-| Hooks | Adaptadores de auth e TanStack Query |
-| Services | Firebase (`auth`/`storage`/`config`) e API Firestore (`tags`/`admin`) |
-| State | TanStack Query (servidor), Zustand (viewer), React local (forms/seleção) |
-| Utils | Calibração e CSV independentes de framework |
+| Camada            | Papel                                                                    |
+| ----------------- | ------------------------------------------------------------------------ |
+| Bootstrap/routing | `main.tsx` (QueryClient + HashRouter), `App.tsx` (lazy routes)           |
+| Pages             | `TagLocatorPage`, `AdminPage` — orquestração e estado de página          |
+| Features          | `tags`, `viewer`, `admin` — fronteira UI mais forte                      |
+| Hooks             | Adaptadores de auth e TanStack Query                                     |
+| Services          | Firebase (`auth`/`storage`/`config`) e API Firestore (`tags`/`admin`)    |
+| State             | TanStack Query (servidor), Zustand (viewer), React local (forms/seleção) |
+| Utils             | Calibração e CSV independentes de framework                              |
 
 ### Fluxos principais
 
@@ -58,16 +58,16 @@ Ainda assim, há riscos importantes de segurança, calibração e importação e
 
 ### Melhorias
 
-| Prioridade | Melhoria |
-|---|---|
-| **Alta** | Coordenadas de calibração são capturadas em **pixels renderizados** (`CalibrationPdfPicker`), não em espaço do PDF. Mudança de viewport/zoom pode deslocar o marcador — isso afeta a função central do app. |
-| **Alta** | Dados do Firestore são normalizados com defaults silenciosos (`normalizeTag`/`normalizeRegion`): coordenada ausente vira `0`, região ausente vira `default`. Erros de dados ficam invisíveis. |
-| **Alta** | Substituição de tags (`replaceAllTags`) não é atômica: batches de 450 writes, sem versionamento nem rollback. |
-| **Média** | `AdminPage` (~425 linhas) concentra ACL, upload, formulário, calibração e status — propenso a races (ex.: salvar região enquanto ainda carrega). |
-| **Média** | Setup do EmbedPDF duplicado entre viewer e calibrador. |
-| **Média** | Coleção `calibrations` nas rules existe, mas o modelo real embute calibração em `regions` — drift de modelo. |
-| **Baixa** | Serviços Firebase são singletons globais; dificulta testes e ambientes (staging/emulator). |
-| **Baixa** | Estado `panX`/`panY` no Zustand nunca é alterado de fato; “Centralizar” é praticamente no-op. |
+| Prioridade | Melhoria                                                                                                                                                                                                    |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Alta**   | Coordenadas de calibração são capturadas em **pixels renderizados** (`CalibrationPdfPicker`), não em espaço do PDF. Mudança de viewport/zoom pode deslocar o marcador — isso afeta a função central do app. |
+| **Alta**   | Dados do Firestore são normalizados com defaults silenciosos (`normalizeTag`/`normalizeRegion`): coordenada ausente vira `0`, região ausente vira `default`. Erros de dados ficam invisíveis.               |
+| **Alta**   | Substituição de tags (`replaceAllTags`) não é atômica: batches de 450 writes, sem versionamento nem rollback.                                                                                               |
+| **Média**  | `AdminPage` (~425 linhas) concentra ACL, upload, formulário, calibração e status — propenso a races (ex.: salvar região enquanto ainda carrega).                                                            |
+| **Média**  | Setup do EmbedPDF duplicado entre viewer e calibrador.                                                                                                                                                      |
+| **Média**  | Coleção `calibrations` nas rules existe, mas o modelo real embute calibração em `regions` — drift de modelo.                                                                                                |
+| **Baixa**  | Serviços Firebase são singletons globais; dificulta testes e ambientes (staging/emulator).                                                                                                                  |
+| **Baixa**  | Estado `panX`/`panY` no Zustand nunca é alterado de fato; “Centralizar” é praticamente no-op.                                                                                                               |
 
 ### Direção sugerida
 
@@ -135,15 +135,15 @@ Ainda assim, há riscos importantes de segurança, calibração e importação e
 
 ### Melhorias
 
-| Prioridade | Melhoria |
-|---|---|
-| **Alta** | Bloquear edição/salvamento de região enquanto `regionQuery` carrega — hoje dá para sobrescrever com defaults. |
-| **Alta** | Ao selecionar tag, centralizar/scrollar até o marcador (API do EmbedPDF); limpar seleção e cache ao logout. |
-| **Média** | Busca acessível (combobox completo); distinguir erro de rede de zero resultados. |
-| **Média** | Import CSV: diff, backup, confirmação tipada, aviso de CSV vazio, progresso por chunk. |
-| **Média** | Expor navegação admin por `role=admin`, não por e-mail hardcoded. |
-| **Média** | Distinguir PDF não configurado, sem permissão, offline e corrompido. |
-| **Baixa** | `prefers-reduced-motion`, semântica de tabela, seleção de arquivo por teclado. |
+| Prioridade | Melhoria                                                                                                      |
+| ---------- | ------------------------------------------------------------------------------------------------------------- |
+| **Alta**   | Bloquear edição/salvamento de região enquanto `regionQuery` carrega — hoje dá para sobrescrever com defaults. |
+| **Alta**   | Ao selecionar tag, centralizar/scrollar até o marcador (API do EmbedPDF); limpar seleção e cache ao logout.   |
+| **Média**  | Busca acessível (combobox completo); distinguir erro de rede de zero resultados.                              |
+| **Média**  | Import CSV: diff, backup, confirmação tipada, aviso de CSV vazio, progresso por chunk.                        |
+| **Média**  | Expor navegação admin por `role=admin`, não por e-mail hardcoded.                                             |
+| **Média**  | Distinguir PDF não configurado, sem permissão, offline e corrompido.                                          |
+| **Baixa**  | `prefers-reduced-motion`, semântica de tabela, seleção de arquivo por teclado.                                |
 
 ### Nota visual
 
@@ -196,17 +196,17 @@ A UI é funcional (slate/blue, cards), mas genérica. Para um app operacional is
 
 ### Melhorias
 
-| Prioridade | Melhoria |
-|---|---|
-| **Alta** | Substituir o solver de calibração por transform affine/similarity consistente, com pontos não colineares e validação de residual. |
-| **Alta** | Validar geometria antes de salvar (pontos degenerados, valores não finitos, escala, projeção fora da página). |
-| **Alta** | Impedir replace vazio por padrão; tornar import recuperável (versão anterior). |
-| **Alta** | Parser CSV standards-compliant (campos multilinha). |
-| **Alta** | Validar IDs, unicidade case-insensitive, existência de região, ranges e status estrito. |
-| **Média** | Definir comportamento de tags inactive (ocultar, avisar ou filtrar). |
-| **Média** | Normalizar campos de busca na escrita (tokens) ou serviço de search. |
-| **Média** | Tratar região ausente como erro de integridade, não fallback silencioso. |
-| **Baixa** | Preservar ou migrar deliberadamente `deck` / `area` do modelo legado. |
+| Prioridade | Melhoria                                                                                                                          |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| **Alta**   | Substituir o solver de calibração por transform affine/similarity consistente, com pontos não colineares e validação de residual. |
+| **Alta**   | Validar geometria antes de salvar (pontos degenerados, valores não finitos, escala, projeção fora da página).                     |
+| **Alta**   | Impedir replace vazio por padrão; tornar import recuperável (versão anterior).                                                    |
+| **Alta**   | Parser CSV standards-compliant (campos multilinha).                                                                               |
+| **Alta**   | Validar IDs, unicidade case-insensitive, existência de região, ranges e status estrito.                                           |
+| **Média**  | Definir comportamento de tags inactive (ocultar, avisar ou filtrar).                                                              |
+| **Média**  | Normalizar campos de busca na escrita (tokens) ou serviço de search.                                                              |
+| **Média**  | Tratar região ausente como erro de integridade, não fallback silencioso.                                                          |
+| **Baixa**  | Preservar ou migrar deliberadamente `deck` / `area` do modelo legado.                                                             |
 
 ---
 
@@ -223,16 +223,16 @@ A UI é funcional (slate/blue, cards), mas genérica. Para um app operacional is
 
 ### Achados
 
-| Prioridade | Achado |
-|---|---|
+| Prioridade  | Achado                                                                                                                                                                                                                                          |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Crítica** | Storage: leitura de PDFs exige só `request.auth != null`, **não** membership em `authorizedUsers`. Qualquer conta Google autenticada que adivinhe `pdfs/{regionId}-planta.pdf` lê o desenho. Paths previsíveis estão documentados publicamente. |
-| **Crítica** | `getDownloadURL()` gera URL com token de longa duração — continua válida após logout até revogação/substituição do objeto. |
-| **Alta** | Rules do Firestore não validam schema (tipos, status, geometria, paths). |
-| **Alta** | Storage não restringe tamanho, content-type real, formato de nome, create vs update. |
-| **Alta** | ACL por e-mail (não UID), sem `email_verified`; e-mail hardcoded em UI e em `storage.rules`. |
-| **Média** | Sem App Check; config Firebase com fallback de produção no código. |
-| **Média** | Cache do React Query / tag selecionada persistem após logout. |
-| **Baixa** | Config Firebase duplicada em `js/`; pasta `js` fora do lint. |
+| **Crítica** | `getDownloadURL()` gera URL com token de longa duração — continua válida após logout até revogação/substituição do objeto.                                                                                                                      |
+| **Alta**    | Rules do Firestore não validam schema (tipos, status, geometria, paths).                                                                                                                                                                        |
+| **Alta**    | Storage não restringe tamanho, content-type real, formato de nome, create vs update.                                                                                                                                                            |
+| **Alta**    | ACL por e-mail (não UID), sem `email_verified`; e-mail hardcoded em UI e em `storage.rules`.                                                                                                                                                    |
+| **Média**   | Sem App Check; config Firebase com fallback de produção no código.                                                                                                                                                                              |
+| **Média**   | Cache do React Query / tag selecionada persistem após logout.                                                                                                                                                                                   |
+| **Baixa**   | Config Firebase duplicada em `js/`; pasta `js` fora do lint.                                                                                                                                                                                    |
 
 ### Nota sobre API key
 
@@ -334,14 +334,14 @@ Faltam:
 
 ## Referências de código citadas na análise
 
-| Área | Arquivos |
-|---|---|
-| Calibração | `src/utils/calibration.ts`, `src/features/admin/CalibrationPdfPicker.tsx` |
-| Busca / contexto | `src/services/api/tags.ts`, `src/hooks/useTagSearch.ts`, `src/hooks/useSelectedTagContext.ts` |
-| Admin / replace | `src/services/api/admin.ts`, `src/pages/AdminPage.tsx`, `src/features/admin/TagDataManager.tsx` |
-| CSV | `src/utils/csv.ts` |
-| Normalização | `src/types/firebase.ts`, `src/types/domain.ts` |
-| Auth UI | `src/pages/TagLocatorPage.tsx`, `src/components/AuthStatus.tsx` |
-| Rules | `firestore.rules`, `storage.rules` |
-| Deploy | `.github/workflows/deploy.yml` |
-| Docs | `README.md`, `docs/admin-cadastro.md` |
+| Área             | Arquivos                                                                                        |
+| ---------------- | ----------------------------------------------------------------------------------------------- |
+| Calibração       | `src/utils/calibration.ts`, `src/features/admin/CalibrationPdfPicker.tsx`                       |
+| Busca / contexto | `src/services/api/tags.ts`, `src/hooks/useTagSearch.ts`, `src/hooks/useSelectedTagContext.ts`   |
+| Admin / replace  | `src/services/api/admin.ts`, `src/pages/AdminPage.tsx`, `src/features/admin/TagDataManager.tsx` |
+| CSV              | `src/utils/csv.ts`                                                                              |
+| Normalização     | `src/types/firebase.ts`, `src/types/domain.ts`                                                  |
+| Auth UI          | `src/pages/TagLocatorPage.tsx`, `src/components/AuthStatus.tsx`                                 |
+| Rules            | `firestore.rules`, `storage.rules`                                                              |
+| Deploy           | `.github/workflows/deploy.yml`                                                                  |
+| Docs             | `README.md`, `docs/admin-cadastro.md`                                                           |

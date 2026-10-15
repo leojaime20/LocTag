@@ -10,8 +10,7 @@ const firebaseConfig = {
   storageBucket:
     import.meta.env.VITE_FIREBASE_STORAGE_BUCKET ?? 'loctag-p84-p85.firebasestorage.app',
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID ?? '495538846299',
-  appId:
-    import.meta.env.VITE_FIREBASE_APP_ID ?? '1:495538846299:web:088fcc2cec2de71d2a5d7e',
+  appId: import.meta.env.VITE_FIREBASE_APP_ID ?? '1:495538846299:web:088fcc2cec2de71d2a5d7e',
 };
 
 export const firebaseApp = initializeApp(firebaseConfig);

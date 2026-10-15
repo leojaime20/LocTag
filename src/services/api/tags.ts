@@ -1,8 +1,18 @@
-import { collection, doc, endAt, getDoc, getDocs, limit, orderBy, query, startAt, where } from 'firebase/firestore';
+import {
+  collection,
+  doc,
+  endAt,
+  getDoc,
+  getDocs,
+  limit,
+  orderBy,
+  query,
+  startAt,
+  where,
+} from 'firebase/firestore';
 
 import { db } from '../firebase/config';
-import { resolveStorageUrl } from '../firebase/storage';
-import type { EquipmentTag, Region, SelectedTagContext } from '../../types/domain';
+import type { EquipmentTag, Region } from '../../types/domain';
 import {
   fallbackRegion,
   normalizeRegion,
@@ -47,13 +57,13 @@ export async function searchTags(term: string): Promise<EquipmentTag[]> {
     searchByField('descricao', trimmed),
   ]);
 
-  return uniqueById(results.flatMap((result) => (result.status === 'fulfilled' ? result.value : [])));
+  return uniqueById(
+    results.flatMap((result) => (result.status === 'fulfilled' ? result.value : [])),
+  );
 }
 
 export async function getTagByTag(tag: string): Promise<EquipmentTag | null> {
-  const snapshot = await getDocs(
-    query(collection(db, 'tags'), where('tag', '==', tag), limit(1)),
-  );
+  const snapshot = await getDocs(query(collection(db, 'tags'), where('tag', '==', tag), limit(1)));
   const first = snapshot.docs[0];
   return first ? normalizeTag(first.id, first.data() as RawTagDocument) : null;
 }
@@ -63,19 +73,4 @@ export async function getRegion(regionId: string): Promise<Region> {
   const snapshot = await getDoc(doc(db, 'regions', regionId));
   if (!snapshot.exists()) return { ...fallbackRegion, id: regionId, name: regionId };
   return normalizeRegion(snapshot.id, snapshot.data() as RawRegionDocument);
-}
-
-export async function buildSelectedTagContext(tag: EquipmentTag): Promise<SelectedTagContext> {
-  const region = await getRegion(tag.regionId);
-  const [plantPdfUrl, sidePdfUrl] = await Promise.all([
-    resolveStorageUrl(region.plantPdf).catch(() => null),
-    resolveStorageUrl(region.sidePdf).catch(() => null),
-  ]);
-
-  return {
-    tag,
-    region,
-    plantPdfUrl,
-    sidePdfUrl,
-  };
 }

@@ -247,3 +247,125 @@ input {
     display: none;
   }
 }
+
+.pdf-surface {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+  background: white;
+}
+.pdf-surface:fullscreen {
+  height: 100vh;
+}
+.pdf-viewport {
+  position: relative;
+  height: 60vh;
+  min-height: 360px;
+  flex: 1;
+  overflow: hidden;
+  background: #e8f0eb;
+  touch-action: none;
+  cursor: grab;
+}
+.pdf-viewport:active {
+  cursor: grabbing;
+}
+.pdf-viewport.is-picking {
+  cursor: crosshair;
+}
+.pdf-layer {
+  position: absolute;
+  max-width: none;
+  pointer-events: none;
+  user-select: none;
+}
+.pdf-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.minimap {
+  position: absolute;
+  bottom: 84px;
+  right: 12px;
+  width: 168px;
+  max-height: 200px;
+  padding: 5px;
+  border: 1px solid #cfded5;
+  border-radius: 8px;
+  background: #fffffff0;
+  box-shadow: 0 2px 12px #07180e22;
+}
+.minimap svg {
+  width: 100%;
+  margin-inline: auto;
+  display: block;
+  touch-action: none;
+  cursor: crosshair;
+}
+.minimap-toggle {
+  display: block;
+  min-height: 32px;
+  width: 100%;
+  font-size: 11px;
+  color: #3d4f45;
+}
+.notice-error {
+  padding: 8px 12px;
+  background: #fff1f2;
+  color: #9f1239;
+  font-size: 13px;
+}
+.notice {
+  padding: 12px;
+  border-radius: 8px;
+  background: #fff7d6;
+  color: #57430c;
+  font-size: 14px;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #3d4f45;
+}
+.field input,
+.field select {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid #cfded5;
+  border-radius: 8px;
+  color: #07180e;
+  background: white;
+}
+.share-dialog {
+  margin: auto;
+  width: min(1000px, 95vw);
+  max-height: 94vh;
+  overflow: auto;
+  border: 1px solid #cfded5;
+  border-radius: 16px;
+  padding: 20px;
+}
+.share-dialog::backdrop {
+  background: #07180e99;
+}
+.share-dialog img {
+  width: 100%;
+  margin-top: 16px;
+}
+@media (max-width: 767px) {
+  .minimap {
+    width: 112px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marker-pulse {
+    animation: none;
+  }
+}
