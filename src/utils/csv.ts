@@ -182,6 +182,9 @@ export function validateTagRows(rows: Record<string, string>[], lineNumbers?: nu
       tag,
       description,
       regionId: row.regionId?.trim() ?? '',
+      moduleRegion: row.moduleRegion?.trim(),
+      owner: row.owner?.trim(),
+      elevation: row.elevation?.trim(),
       x: toNumber(row.x, rowNumber, 'x', errors),
       y: toNumber(row.y, rowNumber, 'y', errors),
       z: toNumber(row.z, rowNumber, 'z', errors),
@@ -201,9 +204,35 @@ function escapeCsv(value: string | number) {
 }
 
 export function tagsToCsv(tags: EquipmentTag[]) {
-  const headers = ['id', ...requiredColumns];
+  const headers = [
+    'id',
+    'tag',
+    'description',
+    'regionId',
+    'moduleRegion',
+    'owner',
+    'elevation',
+    'x',
+    'y',
+    'z',
+    'type',
+    'status',
+  ];
   const lines = tags.map((tag) =>
-    [tag.id, tag.tag, tag.description, tag.regionId, tag.x, tag.y, tag.z, tag.type, tag.status]
+    [
+      tag.id,
+      tag.tag,
+      tag.description,
+      tag.regionId,
+      tag.moduleRegion ?? '',
+      tag.owner ?? '',
+      tag.elevation ?? '',
+      tag.x,
+      tag.y,
+      tag.z,
+      tag.type,
+      tag.status,
+    ]
       .map(escapeCsv)
       .join(','),
   );

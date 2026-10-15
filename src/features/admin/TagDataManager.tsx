@@ -49,6 +49,9 @@ export function TagDataManager({ regions }: { regions: Region[] }) {
             tag.description,
             resolveRegion(tag, volumes).label,
             tag.regionId,
+            tag.moduleRegion,
+            tag.owner,
+            tag.elevation,
             tag.type,
             tag.status,
           ]
@@ -88,6 +91,9 @@ export function TagDataManager({ regions }: { regions: Region[] }) {
           tag: 'P-101A',
           description: 'Bomba de drenagem',
           regionId: 'default',
+          moduleRegion: 'Módulo 01',
+          owner: 'Operação',
+          elevation: 'EL +20.000',
           x: 420,
           y: 280,
           z: 380,
@@ -266,13 +272,16 @@ export function TagDataManager({ regions }: { regions: Region[] }) {
         </p>
       )}
       <div className="mt-4 overflow-auto rounded-2xl border border-slate-200">
-        <table className="min-w-[900px] w-full border-collapse bg-white text-left text-sm">
+        <table className="min-w-[1500px] w-full border-collapse bg-white text-left text-sm">
           <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-400">
             <tr>
               <th className="px-3 py-3">Tag</th>
               <th className="px-3 py-3">Descrição</th>
               <th className="px-3 py-3">Região calculada</th>
               <th className="px-3 py-3">regionId (legado)</th>
+              <th className="px-3 py-3">moduleRegion</th>
+              <th className="px-3 py-3">Owner</th>
+              <th className="px-3 py-3">Elevação</th>
               <th className="px-3 py-3">X</th>
               <th className="px-3 py-3">Y</th>
               <th className="px-3 py-3">Z</th>
@@ -286,7 +295,10 @@ export function TagDataManager({ regions }: { regions: Region[] }) {
                 <td className="px-3 py-3 font-semibold text-slate-950">{tag.tag}</td>
                 <td className="px-3 py-3 text-slate-600">{tag.description}</td>
                 <td className="px-3 py-3 text-slate-600">{resolveRegion(tag, volumes).label}</td>
-                <td className="px-3 py-3 text-slate-600">{tag.regionId}</td>
+                <td className="px-3 py-3 text-slate-600">{tag.regionId || '—'}</td>
+                <td className="px-3 py-3 text-slate-600">{tag.moduleRegion || '—'}</td>
+                <td className="px-3 py-3 text-slate-600">{tag.owner || '—'}</td>
+                <td className="px-3 py-3 text-slate-600">{tag.elevation || '—'}</td>
                 <td className="px-3 py-3 text-slate-600">{tag.x}</td>
                 <td className="px-3 py-3 text-slate-600">{tag.y}</td>
                 <td className="px-3 py-3 text-slate-600">{tag.z}</td>

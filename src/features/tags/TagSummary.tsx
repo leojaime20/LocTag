@@ -37,6 +37,9 @@ export function TagSummary({ context, isLoading }: TagSummaryProps) {
         ? `${context.resolution.label} (cadastro legado: ${context.legacyRegion.name})`
         : context.resolution.label,
     ],
+    ['moduleRegion', context.tag.moduleRegion || '—'],
+    ['Owner', context.tag.owner || '—'],
+    ['Elevação', context.tag.elevation || '—'],
     ['X', `${context.tag.x} m`],
     ['Y', `${context.tag.y} m`],
     ['Z', `${context.tag.z} m`],
@@ -65,7 +68,7 @@ export function TagSummary({ context, isLoading }: TagSummaryProps) {
         </button>
       </div>
 
-      <dl className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
+      <dl className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
         {fields.map(([label, value]) => (
           <div className="rounded-xl bg-slate-50 px-3 py-2" key={label}>
             <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">

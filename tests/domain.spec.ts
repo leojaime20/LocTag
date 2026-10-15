@@ -84,7 +84,23 @@ test('CSV faz ida e volta sem perder vírgula, aspas, quebras, acentos, ID e reg
   expect(parsed.errors).toEqual([]);
   const validated = validateTagRows(parsed.rows, parsed.lineNumbers);
   expect(validated.errors).toEqual([]);
-  expect(validated.tags).toEqual([tag]);
+  expect(validated.tags).toEqual([{ ...tag, moduleRegion: '', owner: '', elevation: '' }]);
+});
+test('CSV preserva metadados opcionais e aceita arquivos sem as colunas novas', () => {
+  const withMetadata = {
+    ...tag,
+    moduleRegion: 'Módulo A',
+    owner: 'Operação',
+    elevation: 'EL +20.000',
+  };
+  const exported = validateTagRows(parseCsv(tagsToCsv([withMetadata])).rows);
+  expect(exported.tags).toEqual([withMetadata]);
+  const legacy = validateTagRows(
+    parseCsv('tag,description,regionId,x,y,z,type,status\nP1,Bomba,,1,2,3,Bomba,active').rows,
+  );
+  expect(legacy.tags[0].moduleRegion).toBeUndefined();
+  expect(legacy.tags[0].owner).toBeUndefined();
+  expect(legacy.tags[0].elevation).toBeUndefined();
 });
 test('CSV aceita delimitadores legados e rejeita números vazios, status, IDs duplicados e aspas', () => {
   const header = 'tag;description;regionId;x;y;z;type;status';

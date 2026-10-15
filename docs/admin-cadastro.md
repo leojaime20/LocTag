@@ -88,14 +88,15 @@ Em **TAGs e dados CSV** há filtro, exportação dos dados atuais e modelo. A ta
 Formato (ordem das colunas pode variar):
 
 ```csv
-id,tag,description,regionId,x,y,z,type,status
-P-101A,P-101A,"Bomba de água, circuito principal",engine-first,150,75,15,Pump,active
-P-102,P-102,Bomba reserva,,170,70,16,Pump,inactive
+id,tag,description,regionId,moduleRegion,owner,elevation,x,y,z,type,status
+P-101A,P-101A,"Bomba de água, circuito principal",engine-first,Módulo 01,Operação,EL +20.000,150,75,15,Pump,active
+P-102,P-102,Bomba reserva,,,,,170,70,16,Pump,inactive
 ```
 
 - Cabeçalhos obrigatórios: `tag,description,regionId,x,y,z,type,status`.
 - `id` é opcional; preservado quando exportado. Quando ausente, é derivado da TAG com codificação para ID Firestore. IDs existentes não são recodificados.
 - `regionId` pode ficar vazio; não substitui o cálculo espacial.
+- `moduleRegion`, `owner` e `elevation` são metadados opcionais. O CSV exportado os inclui; arquivos legados sem essas três colunas continuam aceitos e não apagam os valores já cadastrados. `elevation` é independente de Z.
 - X/Y/Z são obrigatórios e finitos, com ponto decimal. Valores vazios não viram zero.
 - Status aceitos: `active`, `inactive`, `unknown`. Outros valores são erros.
 - São aceitos vírgula, ponto e vírgula e tabulação, BOM, acentos, aspas escapadas e quebras de linha dentro de campos entre aspas. Cabeçalhos `descricao`/`sistema` podem representar `description`/`type`.

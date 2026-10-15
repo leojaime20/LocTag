@@ -29,7 +29,7 @@ Projeto criado:
 - `settings/globalDrawings`: dois PDFs, página, calibrações afins multiponto e zoom. Enquanto `exampleRegionId` estiver preenchido, os PDFs servem apenas à região ilustrativa; as demais TAGs usam seus PDFs regionais.
 - `drawingRevisions`: histórico reversível das configurações globais.
 - `regions`: nome e limites XYZ em metros; campos regionais legados preservados.
-- `tags`: modelo existente, incluindo `regionId` de compatibilidade. Região efetiva e altura são calculadas em memória.
+- `tags`: modelo existente, incluindo `regionId` de compatibilidade e metadados opcionais `moduleRegion`, `owner` e `elevation`. Região efetiva e altura são calculadas em memória.
 - `authorizedUsers/{email}`: autorização; `role: "admin"` permite administrar.
 
 A configuração, calibração, migração, reversão, regras espaciais e CSV estão em [docs/admin-cadastro.md](docs/admin-cadastro.md).
