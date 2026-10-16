@@ -22,7 +22,7 @@ Projeto criado:
 - Web App: `LocTag P84 P85`
 - A base de produção contém TAGs e PDFs regionais anteriores, preservados pela versão 2.0.
 - O exemplo ilustrativo usa a região `EXEMPLO-NAVIO` e quatro TAGs `DEMO-*`.
-- Acesso conforme `authorizedUsers/{email}` no Firestore.
+- Consulta pública de TAGs, regiões e PDFs, sem login ou cadastro prévio. Login com Google é necessário apenas na administração.
 
 ## Modelo de dados
 
@@ -30,7 +30,7 @@ Projeto criado:
 - `drawingRevisions`: histórico reversível das configurações globais.
 - `regions`: nome e limites XYZ em metros; campos regionais legados preservados.
 - `tags`: modelo existente, incluindo `regionId` de compatibilidade e metadados opcionais `moduleRegion`, `owner` e `elevation`. Região efetiva e altura são calculadas em memória.
-- `authorizedUsers/{email}`: autorização; `role: "admin"` permite administrar.
+- `authorizedUsers/{email}`: perfil administrativo; `role: "admin"` permite administrar. Não é necessário para consultar dados.
 
 A configuração, calibração, migração, reversão, regras espaciais e CSV estão em [docs/admin-cadastro.md](docs/admin-cadastro.md).
 O cadastro do exemplo de produção está em [docs/exemplo-producao.md](docs/exemplo-producao.md).

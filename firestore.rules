@@ -2,33 +2,28 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    function isAuthorized() {
-      return request.auth != null
-        && exists(/databases/$(database)/documents/authorizedUsers/$(request.auth.token.email));
-    }
-
     function isAdmin() {
       return request.auth != null
         && get(/databases/$(database)/documents/authorizedUsers/$(request.auth.token.email)).data.role == "admin";
     }
 
     match /tags/{tagId} {
-      allow read: if isAuthorized();
+      allow read: if true;
       allow write: if isAdmin();
     }
 
     match /regions/{regionId} {
-      allow read: if isAuthorized();
+      allow read: if true;
       allow write: if isAdmin();
     }
 
     match /calibrations/{calibrationId} {
-      allow read: if isAuthorized();
+      allow read: if true;
       allow write: if isAdmin();
     }
 
     match /settings/{settingId} {
-      allow read: if isAuthorized();
+      allow read: if true;
       allow write: if isAdmin();
     }
 

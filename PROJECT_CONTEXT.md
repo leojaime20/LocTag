@@ -1,5 +1,7 @@
 # PROJECT_CONTEXT
 
+> Atualização de acesso (16/10/2026): a consulta de `tags`, `regions`, `calibrations`, `settings` e PDFs é pública, sem login ou cadastro em `authorizedUsers`. Essa coleção permanece necessária apenas para atribuir o papel `admin`; edição e histórico `drawingRevisions` continuam restritos a administradores. O login com Google fica na página de administração. As referências abaixo à autenticação ou autorização prévia para consulta descrevem o comportamento anterior e foram substituídas por esta política. Consulte `firestore.rules` e `storage.rules` para as regras atuais.
+
 ## Visão geral do sistema
 
 LocTag é uma aplicação web React/TypeScript para localizar tags de equipamentos em desenhos técnicos em PDF. O usuário autentica com Google, pesquisa uma tag armazenada no Firestore e, ao selecionar um resultado, vê um resumo da tag e duas vistas técnicas: planta e lateral. Cada vista mostra um PDF vindo do Firebase Storage com um marcador calculado a partir das coordenadas reais do equipamento e da calibração cadastrada para a região.

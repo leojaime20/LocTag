@@ -1,27 +1,16 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
-import { AuthStatus } from '../components/AuthStatus';
 import { TagSearch } from '../features/tags/TagSearch';
 import { TagSummary } from '../features/tags/TagSummary';
 import { ViewerWorkspace } from '../features/viewer/ViewerWorkspace';
-import { useAdminProfile } from '../hooks/useAdminProfile';
-import { useAuthUser } from '../hooks/useAuthUser';
 import { useSelectedTagContext } from '../hooks/useSelectedTagContext';
 import type { EquipmentTag } from '../types/domain';
 
 export default function TagLocatorPage() {
-  const { user, isReady } = useAuthUser();
-  const adminProfile = useAdminProfile(user);
   const [selectedTag, setSelectedTag] = useState<EquipmentTag | null>(null);
-  const selectedContext = useSelectedTagContext(user ? selectedTag : null);
+  const selectedContext = useSelectedTagContext(selectedTag);
   const selected = selectedContext.data ?? null;
-
-  const pageState = useMemo(() => {
-    if (!isReady) return 'Verificando acesso...';
-    if (!user) return 'Entre com Google para buscar tags no Firestore.';
-    return 'Busque uma TAG para localizar o equipamento nos desenhos globais.';
-  }, [isReady, user]);
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-950">
@@ -32,18 +21,17 @@ export default function TagLocatorPage() {
             <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950">Busca TAG</h1>
           </div>
           <div className="flex flex-col gap-2 md:items-end">
-            <AuthStatus user={user} isReady={isReady} />
-            {adminProfile.data?.role === 'admin' && (
-              <Link className="text-sm font-semibold text-blue-600" to="/admin">
-                Administração
-              </Link>
-            )}
+            <Link className="text-sm font-semibold text-blue-600" to="/admin">
+              Administração
+            </Link>
           </div>
         </header>
 
         <section className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm md:p-4">
-          <TagSearch disabled={!user} onSelect={setSelectedTag} />
-          <p className="mt-2 text-sm text-slate-500">{pageState}</p>
+          <TagSearch onSelect={setSelectedTag} />
+          <p className="mt-2 text-sm text-slate-500">
+            Busque uma TAG para localizar o equipamento nos desenhos globais.
+          </p>
         </section>
 
         <TagSummary context={selected} isLoading={selectedContext.isFetching} />

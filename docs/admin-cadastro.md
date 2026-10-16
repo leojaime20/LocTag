@@ -2,7 +2,7 @@
 
 ## Acesso
 
-Entre com Google usando um usuário cadastrado em `authorizedUsers/{email}`. A administração exige `role: "admin"`; o link da interface segue esse papel. As regras do Firestore continuam impondo autorização independentemente da interface.
+A consulta de dados e PDFs é pública, sem login ou cadastro prévio. Para administrar, acesse o link "Administração" e entre com Google usando um usuário cadastrado em `authorizedUsers/{email}` com `role: "admin"`. As regras do Firestore continuam restringindo a edição a administradores independentemente da interface.
 
 Antes de publicar esta versão, publique as regras atualizadas, que acrescentam `settings` e `drawingRevisions`:
 

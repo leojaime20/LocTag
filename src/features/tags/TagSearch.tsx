@@ -4,23 +4,21 @@ import { useTagSearch } from '../../hooks/useTagSearch';
 import type { EquipmentTag } from '../../types/domain';
 
 interface TagSearchProps {
-  disabled: boolean;
   onSelect: (tag: EquipmentTag) => void;
 }
 
-export function TagSearch({ disabled, onSelect }: TagSearchProps) {
+export function TagSearch({ onSelect }: TagSearchProps) {
   const [term, setTerm] = useState('');
   const [isOpen, setOpen] = useState(false);
   const deferredTerm = useDeferredValue(term);
-  const search = useTagSearch(deferredTerm, !disabled);
+  const search = useTagSearch(deferredTerm, true);
   const results = search.data ?? [];
   const statusText = useMemo(() => {
-    if (disabled) return 'Login necessário';
     if (deferredTerm.trim().length < 2) return 'Digite ao menos 2 caracteres';
     if (search.isFetching) return 'Buscando no Firestore';
     if (results.length === 0) return 'Nenhuma tag encontrada';
     return `${results.length} resultado${results.length === 1 ? '' : 's'}`;
-  }, [deferredTerm, disabled, results.length, search.isFetching]);
+  }, [deferredTerm, results.length, search.isFetching]);
 
   return (
     <div className="relative">
@@ -32,7 +30,6 @@ export function TagSearch({ disabled, onSelect }: TagSearchProps) {
         className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-base outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:bg-slate-100"
         placeholder="Ex.: P-101A, bomba, válvula..."
         value={term}
-        disabled={disabled}
         onChange={(event) => setTerm(event.target.value)}
         onFocus={() => setOpen(true)}
       />
