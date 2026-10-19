@@ -1,7 +1,7 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import type { Region, VolumeRegion } from '../../types/domain';
-import { archiveRegion, saveVolumeRegion } from '../../services/api/drawings';
+import { archiveRegion, deleteRegion, saveVolumeRegion } from '../../services/api/drawings';
 import { hasValidBounds, regionConflict } from '../../utils/regions';
 import { NumberField } from './GlobalDrawingManager';
 const empty: VolumeRegion = {
@@ -15,11 +15,12 @@ const empty: VolumeRegion = {
   zMax: NaN,
 };
 export function RegionManager({ regions }: { regions: Region[] }) {
+  const client = useQueryClient();
   const [form, setForm] = useState<VolumeRegion>(empty),
     [creating, setCreating] = useState(true);
   const [filter, setFilter] = useState(''),
     [acknowledged, setAcknowledged] = useState(''),
-    [deleting, setDeleting] = useState<string | null>(null);
+    [deleting, setDeleting] = useState<{ id: string; permanent: boolean } | null>(null);
   const conflicts = hasValidBounds(form)
     ? regions
         .filter((r) => !r.archived && r.id !== form.id && hasValidBounds(r))
@@ -37,7 +38,28 @@ export function RegionManager({ regions }: { regions: Region[] }) {
       setAcknowledged('');
     },
   });
-  const archive = useMutation({ mutationFn: archiveRegion, onSuccess: () => setDeleting(null) });
+  const remove = useMutation({
+    mutationFn: ({ id, permanent }: { id: string; permanent: boolean }) =>
+      permanent ? deleteRegion(id) : archiveRegion(id),
+    onSuccess: (_, { id, permanent }) => {
+      client.setQueryData<Region[]>(['regions'], (current) =>
+        permanent
+          ? current?.filter((region) => region.id !== id)
+          : current?.map((region) => (region.id === id ? { ...region, archived: true } : region)),
+      );
+      if (form.id === id) {
+        setForm(empty);
+        setCreating(true);
+        setAcknowledged('');
+        save.reset();
+      }
+      setDeleting(null);
+    },
+  });
+  const requestRemoval = (id: string, permanent: boolean) => {
+    remove.reset();
+    setDeleting({ id, permanent });
+  };
   const update = (patch: Partial<VolumeRegion>) => {
     save.reset();
     setForm({ ...form, ...patch });
@@ -107,6 +129,7 @@ export function RegionManager({ regions }: { regions: Region[] }) {
             !form.name.trim() ||
             !form.id ||
             save.isPending ||
+            remove.isPending ||
             (conflicts.length > 0 && acknowledged !== conflictKey)
           }
           onClick={() => save.mutate()}
@@ -115,6 +138,7 @@ export function RegionManager({ regions }: { regions: Region[] }) {
         </button>
         <button
           className="button-secondary"
+          disabled={remove.isPending}
           onClick={() => {
             setForm(empty);
             setCreating(true);
@@ -152,9 +176,10 @@ export function RegionManager({ regions }: { regions: Region[] }) {
                       : 'Região legada — limites não cadastrados'}
                   </p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <button
                     className="button-secondary"
+                    disabled={remove.isPending || save.isPending}
                     onClick={() => {
                       setForm({
                         id: r.id,
@@ -174,25 +199,57 @@ export function RegionManager({ regions }: { regions: Region[] }) {
                     {r.archived ? 'Restaurar / editar' : 'Editar'}
                   </button>
                   {!r.archived && (
-                    <button className="button-secondary" onClick={() => setDeleting(r.id)}>
-                      Excluir
+                    <button
+                      className="button-secondary"
+                      disabled={remove.isPending || save.isPending}
+                      onClick={() => requestRemoval(r.id, false)}
+                    >
+                      Arquivar
                     </button>
                   )}
+                  <button
+                    className="button-secondary text-red-700"
+                    disabled={remove.isPending || save.isPending}
+                    onClick={() => requestRemoval(r.id, true)}
+                  >
+                    Excluir definitivamente
+                  </button>
                 </div>
               </div>
-              {deleting === r.id && (
+              {deleting?.id === r.id && (
                 <div className="notice mt-3">
-                  Excluir “{r.name}” da identificação? O documento, PDFs e calibrações serão
-                  preservados como arquivo.
+                  {deleting.permanent ? (
+                    <p>
+                      Excluir definitivamente “{r.name}”? O cadastro e suas calibrações serão
+                      removidos, sem possibilidade de restauração. As TAGs e os arquivos PDF serão
+                      preservados, mas o vínculo com os desenhos desta região será perdido.
+                    </p>
+                  ) : (
+                    <p>
+                      Arquivar “{r.name}” e retirá-la da identificação? O cadastro, PDFs e
+                      calibrações serão preservados para restauração.
+                    </p>
+                  )}
                   <div className="flex gap-2 mt-2">
                     <button
                       className="button-primary"
-                      disabled={archive.isPending}
-                      onClick={() => archive.mutate(r.id)}
+                      disabled={remove.isPending}
+                      onClick={() => remove.mutate(deleting)}
                     >
-                      Confirmar exclusão
+                      {remove.isPending
+                        ? 'Processando…'
+                        : deleting.permanent
+                          ? 'Confirmar exclusão definitiva'
+                          : 'Confirmar arquivamento'}
                     </button>
-                    <button className="button-secondary" onClick={() => setDeleting(null)}>
+                    <button
+                      className="button-secondary"
+                      disabled={remove.isPending}
+                      onClick={() => {
+                        setDeleting(null);
+                        remove.reset();
+                      }}
+                    >
                       Cancelar
                     </button>
                   </div>
@@ -201,7 +258,16 @@ export function RegionManager({ regions }: { regions: Region[] }) {
             </div>
           ))}
       </div>
-      {archive.isError && <p className="notice-error">{archive.error.message}</p>}
+      {remove.isError && (
+        <p role="alert" className="notice-error">
+          {remove.error.message}
+        </p>
+      )}
+      {remove.isSuccess && (
+        <p role="status">
+          {remove.variables.permanent ? 'Região excluída definitivamente.' : 'Região arquivada.'}
+        </p>
+      )}
     </section>
   );
 }

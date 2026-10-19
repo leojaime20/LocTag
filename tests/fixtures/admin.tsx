@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { createRoot } from 'react-dom/client';
 import { RegionManager } from '../../src/features/admin/RegionManager';
 import { GlobalDrawingManager } from '../../src/features/admin/GlobalDrawingManager';
@@ -30,6 +30,11 @@ const regions: Region[] = [
 ];
 const client = new QueryClient();
 client.setQueryData(['admin-tags'], []);
+client.setQueryData(['regions'], regions);
+export function RegionsFixture() {
+  const query = useQuery({ queryKey: ['regions'], queryFn: () => regions, staleTime: Infinity });
+  return <RegionManager regions={query.data ?? []} />;
+}
 const drawing = { path: new URL('./drawing.pdf', location.href).href, pageIndex: 0, calibration };
 const globals: GlobalDrawings = {
   version: 2,
@@ -48,7 +53,7 @@ createRoot(document.getElementById('root')!).render(
       ) : mode === 'calibration' ? (
         <GlobalDrawingManager initial={globals} />
       ) : (
-        <RegionManager regions={regions} />
+        <RegionsFixture />
       )}
     </div>
   </QueryClientProvider>,

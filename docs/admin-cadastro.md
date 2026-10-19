@@ -55,7 +55,9 @@ Em **Regiões**, informe ID único, nome e os seis limites. Para cada eixo, mín
 
 A interface detecta sobreposição parcial, contenção total e contato de fronteira. Contatos por face, aresta ou ponto podem produzir ambiguidade porque os limites são inclusivos. Para salvar conflitos, é necessário marcar que os limites foram revisados. Qualquer alteração nos valores ou conflitos exige novo reconhecimento. A criação verifica IDs existentes em transação, inclusive os arquivados.
 
-**Excluir** retira a região da identificação após confirmação e marca `archived: true`, preservando o documento e campos legados. **Restaurar / editar**, seguido de salvar, reativa a região. Nenhum PDF é apagado.
+**Arquivar** retira a região da identificação após confirmação e marca `archived: true`, preservando o documento e campos legados. **Restaurar / editar**, seguido de salvar, reativa a região.
+
+**Excluir definitivamente** está disponível tanto para regiões ativas quanto arquivadas. Após confirmação, remove o documento da região e suas calibrações, libera o ID para novo cadastro e retira a região da lista, sem restauração. As TAGs (incluindo seu `regionId` legado) e os arquivos PDF são preservados; os desenhos regionais deixam de ser acessíveis por essa região. Se a região estiver configurada como ilustrativa nos desenhos globais, altere essa configuração antes de excluí-la.
 
 ## Identificação e altura
 

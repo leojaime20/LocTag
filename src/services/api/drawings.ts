@@ -129,3 +129,17 @@ export async function archiveRegion(id: string) {
     transaction.update(reference, { archived: true, updatedAt: serverTimestamp() });
   });
 }
+export async function deleteRegion(id: string) {
+  const reference = doc(db, 'regions', id);
+  await runTransaction(db, async (transaction) => {
+    const existing = await transaction.get(reference);
+    const globals = await transaction.get(globalsRef);
+    if (!existing.exists()) throw new Error('Região não encontrada.');
+    if (globals.exists() && globals.data().exampleRegionId === id)
+      throw new Error(
+        'Esta região está configurada como região ilustrativa. Altere a região em Desenhos globais antes de excluí-la.',
+      );
+    // TAGs retain their legacy regionId; PDFs may be shared with other drawings.
+    transaction.delete(reference);
+  });
+}
