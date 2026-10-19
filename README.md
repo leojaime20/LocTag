@@ -22,7 +22,7 @@ Projeto criado:
 - Web App: `LocTag P84 P85`
 - A base de produção contém TAGs e PDFs regionais anteriores, preservados pela versão 2.0.
 - O exemplo ilustrativo usa a região `EXEMPLO-NAVIO` e quatro TAGs `DEMO-*`.
-- Consulta pública de TAGs, regiões e PDFs, sem login ou cadastro prévio. Login com Google é necessário apenas na administração.
+- Consulta pública de TAGs, regiões e PDFs, sem login ou cadastro prévio. Login com e-mail e senha ou Google é necessário apenas na administração.
 
 ## Modelo de dados
 

@@ -15,6 +15,10 @@ test('visitante pode pesquisar sem login e administração continua protegida', 
 
   await page.getByRole('link', { name: 'Administração', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Entrar com Google' })).toBeVisible();
-  await expect(page.getByText('Entre com Google para acessar.')).toBeVisible();
+  await expect(
+    page.getByText('Entre com e-mail e senha ou com Google para acessar.'),
+  ).toBeVisible();
+  await expect(page.getByLabel('E-mail', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('Senha', { exact: true })).toHaveAttribute('type', 'password');
   await expect(page.getByRole('navigation', { name: 'Áreas administrativas' })).toHaveCount(0);
 });

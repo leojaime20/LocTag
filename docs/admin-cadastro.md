@@ -2,7 +2,9 @@
 
 ## Acesso
 
-A consulta de dados e PDFs é pública, sem login ou cadastro prévio. Para administrar, acesse o link "Administração" e entre com Google usando um usuário cadastrado em `authorizedUsers/{email}` com `role: "admin"`. As regras do Firestore continuam restringindo a edição a administradores independentemente da interface.
+A consulta de dados e PDFs é pública, sem login ou cadastro prévio. Para administrar, acesse o link "Administração" e entre com e-mail e senha ou Google usando um usuário cadastrado em `authorizedUsers/{email}` com `role: "admin"`. As regras do Firestore continuam restringindo a edição a administradores independentemente da interface.
+
+Para contas com senha, habilite o provedor **E-mail/senha** no Firebase Authentication, crie a conta e cadastre o mesmo e-mail em `authorizedUsers`. Senhas ficam apenas no Firebase Authentication; nunca devem ser gravadas no Firestore ou no repositório.
 
 Antes de publicar esta versão, publique as regras atualizadas, que acrescentam `settings` e `drawingRevisions`:
 

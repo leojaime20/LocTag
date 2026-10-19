@@ -26,7 +26,7 @@ export default function AdminPage() {
               {!isReady || profile.isLoading
                 ? 'Verificando acesso…'
                 : !user
-                  ? 'Entre com Google para acessar.'
+                  ? 'Entre com e-mail e senha ou com Google para acessar.'
                   : isAdmin
                     ? 'Administrador ativo.'
                     : 'Seu usuário não possui permissão administrativa.'}
