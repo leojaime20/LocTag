@@ -1,4 +1,5 @@
-import type { EquipmentTag, TagStatus } from '../types/domain';
+import type { EquipmentTag, Region, TagStatus, VolumeRegion } from '../types/domain';
+import { hasValidBounds, resolveRegion } from './regions';
 
 export interface CsvParseResult {
   rows: Record<string, string>[];
@@ -203,7 +204,11 @@ function escapeCsv(value: string | number) {
   return `"${stringValue.replace(/"/g, '""')}"`;
 }
 
-export function tagsToCsv(tags: EquipmentTag[]) {
+// Location columns are export-only; validateTagRows deliberately ignores them.
+export function tagsToCsv(tags: EquipmentTag[], options?: { locationRegions: Region[] }) {
+  const volumes = options?.locationRegions.filter(
+    (region): region is Region & VolumeRegion => !region.archived && hasValidBounds(region),
+  );
   const headers = [
     'id',
     'tag',
@@ -218,8 +223,16 @@ export function tagsToCsv(tags: EquipmentTag[]) {
     'type',
     'status',
   ];
-  const lines = tags.map((tag) =>
-    [
+  if (volumes) {
+    headers.push(
+      'calculatedRegionId',
+      'calculatedRegionName',
+      'locationStatus',
+      'heightAboveFloor',
+    );
+  }
+  const lines = tags.map((tag) => {
+    const values: (string | number)[] = [
       tag.id,
       tag.tag,
       tag.description,
@@ -232,10 +245,18 @@ export function tagsToCsv(tags: EquipmentTag[]) {
       tag.z,
       tag.type,
       tag.status,
-    ]
-      .map(escapeCsv)
-      .join(','),
-  );
+    ];
+    if (volumes) {
+      const { region, matches, height } = resolveRegion(tag, volumes);
+      values.push(
+        region?.id ?? '',
+        region?.name ?? '',
+        region ? 'identified' : matches.length ? 'ambiguous' : 'unassigned',
+        height ?? '',
+      );
+    }
+    return values.map(escapeCsv).join(',');
+  });
 
   return [headers.join(','), ...lines].join('\n');
 }

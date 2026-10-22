@@ -45,11 +45,28 @@ const globals: GlobalDrawings = {
   side: drawing,
 };
 const mode = new URLSearchParams(location.search).get('mode');
+const params = new URLSearchParams(location.search);
+if (mode === 'csv' && params.has('export')) {
+  client.setQueryData(
+    ['admin-tags'],
+    Array.from({ length: 205 }, (_, index) => ({
+      id: `P-${index}`,
+      tag: `P-${index}`,
+      description: 'Bomba',
+      regionId: 'legado',
+      x: index === 204 ? 20 : 5,
+      y: 5,
+      z: 5,
+      type: 'Bomba',
+      status: 'active',
+    })),
+  );
+}
 createRoot(document.getElementById('root')!).render(
   <QueryClientProvider client={client}>
     <div className="p-4">
       {mode === 'csv' ? (
-        <TagDataManager regions={regions} />
+        <TagDataManager regions={regions} regionsReady={!params.has('regionsUnavailable')} />
       ) : mode === 'calibration' ? (
         <GlobalDrawingManager initial={globals} />
       ) : (

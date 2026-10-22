@@ -1,4 +1,6 @@
 import { test, expect } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
+import { parseCsv } from '../src/utils/csv';
 test.beforeEach(async ({ page }) => {
   await page.route('**/firestore.googleapis.com/**', (route) => route.abort());
 });
@@ -44,6 +46,55 @@ test('CSV apresenta registros e erros e não escreve antes da confirmação', as
   await expect(page.getByRole('button', { name: 'Confirmar e substituir tabela' })).toBeEnabled();
   await expect(page.getByRole('cell', { name: 'Bomba, água', exact: true })).toBeVisible();
   expect(firestoreRequests).toBe(0);
+});
+test('exportação opcional inclui localização de todas as TAGs e permite reimportação', async ({
+  page,
+}) => {
+  await page.goto('/tests/fixtures/admin.html?mode=csv&export');
+  const option = page.getByRole('checkbox', { name: 'Incluir localização calculada no CSV' });
+  await expect(option).not.toBeChecked();
+  const downloadCsv = async () => {
+    const downloaded = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'Baixar dados atuais' }).click();
+    const file = await downloaded;
+    return {
+      name: file.suggestedFilename(),
+      content: await readFile((await file.path())!, 'utf8'),
+    };
+  };
+  const standard = await downloadCsv();
+  expect(standard.name).toBe('loctag-tags.csv');
+  expect(parseCsv(standard.content).rows[0]).not.toHaveProperty('locationStatus');
+  await option.check();
+  await page.getByPlaceholder('Filtrar tabela atual...').fill('P-204');
+  const exported = await downloadCsv();
+  expect(exported.name).toBe('loctag-tags-com-localizacao.csv');
+  const parsed = parseCsv(exported.content);
+  expect(parsed.errors).toEqual([]);
+  expect(parsed.rows).toHaveLength(205);
+  expect(parsed.rows[0]).toMatchObject({
+    calculatedRegionName: 'Deck A',
+    locationStatus: 'identified',
+  });
+  expect(parsed.rows[204]).toMatchObject({ calculatedRegionId: '', locationStatus: 'unassigned' });
+  await page.locator('input[type=file]').setInputFiles({
+    name: exported.name,
+    mimeType: 'text/csv',
+    buffer: Buffer.from(exported.content),
+  });
+  await expect(page.getByText(/205 registros válidos • 0 inválidos/)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Confirmar e substituir tabela' })).toBeEnabled();
+});
+test('exportação com localização aguarda regiões disponíveis', async ({ page }) => {
+  await page.goto('/tests/fixtures/admin.html?mode=csv&export&regionsUnavailable');
+  const download = page.getByRole('button', { name: 'Baixar dados atuais' });
+  await expect(download).toBeEnabled();
+  await page.getByRole('checkbox', { name: 'Incluir localização calculada no CSV' }).check();
+  await expect(download).toBeDisabled();
+  await expect(page.getByRole('status')).toContainText('regiões sejam carregadas com sucesso');
+  await page.getByRole('button', { name: 'Baixar modelo' }).click();
+  await page.getByRole('checkbox', { name: 'Incluir localização calculada no CSV' }).uncheck();
+  await expect(download).toBeEnabled();
 });
 test('calibração adiciona, edita e exclui pontos e apresenta erros antes de salvar', async ({
   page,

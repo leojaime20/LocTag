@@ -3,7 +3,7 @@ import { fitAffine, applyAffine, realToPdfPoint } from '../src/utils/calibration
 import { hasValidBounds, regionConflict, resolveRegion } from '../src/utils/regions';
 import { parseCsv, tagsToCsv, validateTagRows } from '../src/utils/csv';
 import { pageToScreen, screenToPage, viewportRect } from '../src/utils/viewport';
-import type { EquipmentTag, VolumeRegion } from '../src/types/domain';
+import type { EquipmentTag, Region, VolumeRegion } from '../src/types/domain';
 const tag: EquipmentTag = {
   id: 'P%2F1',
   tag: 'P/1',
@@ -101,6 +101,73 @@ test('CSV preserva metadados opcionais e aceita arquivos sem as colunas novas', 
   expect(legacy.tags[0].moduleRegion).toBeUndefined();
   expect(legacy.tags[0].owner).toBeUndefined();
   expect(legacy.tags[0].elevation).toBeUndefined();
+});
+test('CSV com localização usa limites XYZ ativos e preserva as regras de ambiguidade', () => {
+  const baseRegion: Region = {
+    ...r,
+    name: 'Deck A, "principal"',
+    plantPdf: '',
+    sidePdf: '',
+    plantCalibration: { id: 'a', pdfId: 'a', points: [] },
+    sideCalibration: { id: 'a', pdfId: 'a', points: [] },
+  };
+  const options = { locationRegions: [baseRegion] };
+  const row = (item: EquipmentTag, locationRegions = options.locationRegions) => {
+    const parsed = parseCsv(tagsToCsv([item], { locationRegions }));
+    expect(parsed.errors).toEqual([]);
+    return parsed.rows[0];
+  };
+  expect(row({ ...tag, regionId: 'outro' })).toMatchObject({
+    regionId: 'outro',
+    calculatedRegionId: 'a',
+    calculatedRegionName: baseRegion.name,
+    locationStatus: 'identified',
+    heightAboveFloor: '5',
+  });
+  for (const axis of ['x', 'y', 'z']) {
+    expect(row({ ...tag, regionId: 'a', [axis]: 11 })).toMatchObject({
+      calculatedRegionId: '',
+      calculatedRegionName: '',
+      locationStatus: 'unassigned',
+      heightAboveFloor: '',
+    });
+  }
+  expect(row({ ...tag, x: 10, y: 0, z: 0 }).heightAboveFloor).toBe('0');
+  for (const regions of [
+    [],
+    [{ ...baseRegion, archived: true }],
+    [{ ...baseRegion, zMax: undefined }],
+    [{ ...baseRegion, zMin: 10, zMax: 0 }],
+  ]) {
+    expect(row(tag, regions).locationStatus).toBe('unassigned');
+  }
+  const overlaps = [baseRegion, { ...baseRegion, id: 'b', name: 'Deck B', zMin: 2 }];
+  expect(row(tag, overlaps)).toMatchObject({
+    locationStatus: 'ambiguous',
+    calculatedRegionId: '',
+    heightAboveFloor: '',
+  });
+  expect(row({ ...tag, regionId: 'b' }, overlaps)).toMatchObject({
+    locationStatus: 'identified',
+    calculatedRegionId: 'b',
+    heightAboveFloor: '3',
+  });
+});
+test('importação ignora localização exportada mesmo adulterada e recalcula pelas coordenadas', () => {
+  const original = { ...tag, moduleRegion: '', owner: '', elevation: '' };
+  const csv = tagsToCsv([original], { locationRegions: [] });
+  const parsed = parseCsv(csv);
+  Object.assign(parsed.rows[0], {
+    calculatedRegionId: 'regiao-inventada',
+    calculatedRegionName: 'Nome incorreto',
+    locationStatus: 'identified',
+    heightAboveFloor: '999',
+  });
+  const imported = validateTagRows(parsed.rows, parsed.lineNumbers);
+  expect(imported.errors).toEqual([]);
+  expect(imported.tags).toEqual([original]);
+  expect(resolveRegion(imported.tags[0], [r]).region?.id).toBe('a');
+  expect(parseCsv(tagsToCsv([original])).rows[0]).not.toHaveProperty('locationStatus');
 });
 test('CSV aceita delimitadores legados e rejeita números vazios, status, IDs duplicados e aspas', () => {
   const header = 'tag;description;regionId;x;y;z;type;status';

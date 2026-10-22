@@ -25,13 +25,20 @@ function readFileAsText(file: File): Promise<string> {
   });
 }
 
-export function TagDataManager({ regions }: { regions: Region[] }) {
+export function TagDataManager({
+  regions,
+  regionsReady,
+}: {
+  regions: Region[];
+  regionsReady: boolean;
+}) {
   const volumes = useMemo(
     () => regions.filter((r) => !r.archived && hasValidBounds(r)) as VolumeRegion[],
     [regions],
   );
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState('');
+  const [includeLocation, setIncludeLocation] = useState(false);
   const [preview, setPreview] = useState<ImportPreview | null>(null);
   const tagsQuery = useQuery({
     queryKey: ['admin-tags'],
@@ -78,8 +85,11 @@ export function TagDataManager({ regions }: { regions: Region[] }) {
   });
 
   const exportCurrent = () => {
-    const source = tags.length > 0 ? tags : [];
-    downloadTextFile('loctag-tags.csv', tagsToCsv(source));
+    if (includeLocation && !regionsReady) return;
+    downloadTextFile(
+      includeLocation ? 'loctag-tags-com-localizacao.csv' : 'loctag-tags.csv',
+      tagsToCsv(tags, includeLocation ? { locationRegions: regions } : undefined),
+    );
   };
 
   const exportTemplate = () => {
@@ -155,7 +165,11 @@ export function TagDataManager({ regions }: { regions: Region[] }) {
           <button
             className="button-secondary"
             type="button"
-            disabled={!tagsQuery.isSuccess || replaceMutation.isPending}
+            disabled={
+              !tagsQuery.isSuccess ||
+              replaceMutation.isPending ||
+              (includeLocation && !regionsReady)
+            }
             onClick={exportCurrent}
           >
             Baixar dados atuais
@@ -175,6 +189,28 @@ export function TagDataManager({ regions }: { regions: Region[] }) {
             />
           </label>
         </div>
+      </div>
+
+      <div className="mt-4 rounded-xl bg-slate-50 p-3 text-sm">
+        <label className="flex items-center gap-2 font-medium text-slate-700">
+          <input
+            type="checkbox"
+            checked={includeLocation}
+            onChange={(event) => setIncludeLocation(event.target.checked)}
+            aria-describedby="export-location-help"
+          />
+          Incluir localização calculada no CSV
+        </label>
+        <p id="export-location-help" className="mt-1 text-slate-500">
+          Acrescenta a região, o status da localização e a altura sobre o piso (m), calculados pelas
+          coordenadas X, Y e Z. Para encontrar itens fora das regiões, filtre locationStatus por
+          unassigned. Essas colunas são informativas e ignoradas na importação.
+        </p>
+        {includeLocation && !regionsReady && (
+          <p className="mt-2 text-amber-700" role="status">
+            A exportação com localização exige que as regiões sejam carregadas com sucesso.
+          </p>
+        )}
       </div>
 
       <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto] md:items-center">

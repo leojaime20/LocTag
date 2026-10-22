@@ -82,7 +82,9 @@ export default function AdminPage() {
                 <RegionManager regions={regions.data} />
               </div>
             )}
-            {tab === 'tags' && <TagDataManager regions={regions.data ?? []} />}
+            {tab === 'tags' && (
+              <TagDataManager regions={regions.data ?? []} regionsReady={regions.isSuccess} />
+            )}
           </>
         )}
       </div>

@@ -89,6 +89,19 @@ A busca principal continua iniciando em dois caracteres, com consultas limitadas
 
 Em **TAGs e dados CSV** há filtro, exportação dos dados atuais e modelo. A tabela distingue região calculada de `regionId` legado. Campos legados `descricao`, `sistema`, `planta` e `lateral` continuam reconhecidos na leitura.
 
+Para extrair a localização, marque **Incluir localização calculada no CSV** e clique em **Baixar dados atuais**. O arquivo `loctag-tags-com-localizacao.csv` inclui todas as TAGs, independentemente do filtro ou do limite de 200 linhas da tabela, acrescentando:
+
+| Coluna                 | Conteúdo                                                                                                                                    |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `calculatedRegionId`   | ID da região resolvida pelo cruzamento de X/Y/Z.                                                                                            |
+| `calculatedRegionName` | Nome da região resolvida.                                                                                                                   |
+| `locationStatus`       | `identified` (região identificada), `unassigned` (fora de todas as regiões válidas e ativas) ou `ambiguous` (várias regiões sem desempate). |
+| `heightAboveFloor`     | Altura relativa ao limite inferior da região, em metros.                                                                                    |
+
+Filtre `locationStatus` por `unassigned` para mapear os itens ainda sem região. Nos casos `unassigned` e `ambiguous`, ID, nome e altura ficam vazios. O cálculo usa as mesmas regras da tabela, incluindo limites inclusivos e o desempate legado, e desconsidera regiões arquivadas ou sem limites válidos. A exportação com localização fica disponível após as regiões serem carregadas com sucesso; uma lista carregada sem regiões resulta em todas as TAGs como `unassigned`.
+
+Essas quatro colunas são apenas informativas: **a importação as ignora**, mesmo se forem editadas. Não são gravadas nas TAGs nem substituem o cruzamento das coordenadas. `regionId` e os demais campos existentes mantêm seu comportamento anterior. Desmarcar a opção mantém o CSV habitual; **Baixar modelo** também mantém o formato habitual.
+
 Formato (ordem das colunas pode variar):
 
 ```csv
