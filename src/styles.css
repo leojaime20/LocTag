@@ -369,3 +369,106 @@ input {
     animation: none;
   }
 }
+
+.region-map-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 1.25rem;
+}
+.region-map-viewport {
+  position: relative;
+  height: clamp(360px, 62vh, 700px);
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid var(--petrobras-border);
+  border-radius: 0.75rem;
+  background: #f0f5f2;
+}
+.region-map-viewport canvas {
+  touch-action: none;
+}
+.region-map-empty {
+  position: absolute;
+  inset: 45% 1rem auto;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  background: #ffffffed;
+  text-align: center;
+  pointer-events: none;
+  font-size: 14px;
+}
+.region-map-badge {
+  border-radius: 6px;
+  padding: 5px 8px;
+  background: #f4f8f5;
+}
+.region-map-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+  font-size: 13px;
+}
+.region-map-options input[type='range'] {
+  max-width: 100%;
+  accent-color: #008542;
+}
+.region-map-list {
+  max-height: 300px;
+  overflow: auto;
+  border: 1px solid #cfded5;
+  border-radius: 10px;
+}
+.region-map-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border-bottom: 1px solid #e8f0eb;
+  font-size: 13px;
+}
+.region-map-list li:last-child {
+  border-bottom: 0;
+}
+.region-map-list li.is-selected {
+  background: #fff7d6;
+}
+.region-map-swatch {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  border-radius: 3px;
+}
+.region-map-conflicts {
+  max-height: 260px;
+  overflow: auto;
+  margin-top: 8px;
+}
+.region-map-conflict {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  min-height: 44px;
+  text-align: left;
+  padding: 10px;
+  border-bottom: 1px solid #e8f0eb;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.region-map-conflict:hover {
+  background: #f4f8f5;
+}
+.region-map-conflict span {
+  color: #53665b;
+  font-size: 12px;
+}
+@media (max-width: 1023px) {
+  .region-map-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .region-map-viewport {
+    height: 52vh;
+    min-height: 360px;
+  }
+}

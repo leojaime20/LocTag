@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthStatus } from '../components/AuthStatus';
 import { TagDataManager } from '../features/admin/TagDataManager';
@@ -7,12 +7,13 @@ import { RegionManager } from '../features/admin/RegionManager';
 import { useAdminProfile } from '../hooks/useAdminProfile';
 import { useAuthUser } from '../hooks/useAuthUser';
 import { useSpatialData } from '../hooks/useSpatialData';
+const RegionMapPanel = lazy(() => import('../features/admin/RegionMapPanel'));
 export default function AdminPage() {
   const { user, isReady } = useAuthUser();
   const profile = useAdminProfile(user),
     isAdmin = profile.data?.role === 'admin';
   const { regions, drawings } = useSpatialData(isAdmin);
-  const [tab, setTab] = useState<'drawings' | 'regions' | 'tags'>('drawings');
+  const [tab, setTab] = useState<'drawings' | 'regions' | 'map' | 'tags'>('drawings');
   return (
     <main className="min-h-screen bg-slate-50 text-slate-950">
       <div className="mx-auto max-w-[1440px] space-y-4 p-4 sm:p-6">
@@ -46,6 +47,7 @@ export default function AdminPage() {
                 [
                   ['drawings', 'Desenhos globais'],
                   ['regions', 'Regiões'],
+                  ['map', 'Mapa 3D'],
                   ['tags', 'TAGs e dados CSV'],
                 ] as const
               ).map(([id, title]) => (
@@ -85,6 +87,24 @@ export default function AdminPage() {
             {tab === 'tags' && (
               <TagDataManager regions={regions.data ?? []} regionsReady={regions.isSuccess} />
             )}
+            {tab === 'map' &&
+              (regions.isSuccess ? (
+                <Suspense
+                  fallback={
+                    <p role="status" className="panel">
+                      Carregando mapa 3D…
+                    </p>
+                  }
+                >
+                  <RegionMapPanel regions={regions.data} />
+                </Suspense>
+              ) : (
+                !regions.isError && (
+                  <p role="status" className="panel">
+                    Carregando regiões…
+                  </p>
+                )
+              ))}
           </>
         )}
       </div>

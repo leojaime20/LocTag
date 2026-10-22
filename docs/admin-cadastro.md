@@ -53,6 +53,20 @@ Com exatamente três referências o resíduo pode ser zero mesmo quando um ponto
 
 ## Regiões
 
+### Inspeção no Mapa 3D
+
+A aba **Mapa 3D** mostra as regiões como blocos proporcionais aos limites XYZ em metros, com Z na vertical. Arraste para girar, use a rolagem para zoom e o botão direito para deslocar. Em telas de toque, use um dedo para girar e dois para zoom e deslocamento. Os botões de vista superior (XY), frontal (XZ), lateral (YZ) e isométrica reposicionam a câmera; **Enquadrar tudo visível** ajusta a vista aos blocos exibidos.
+
+Selecione um bloco ou um nome na lista para consultar limites e dimensões, focar ou isolar a região. A busca por nome/ID e as caixas de seleção filtram a cena. **Restaurar visualização** limpa a busca, o isolamento e as regiões ocultas e desliga o corte. As cores são estáveis por ID; arquivadas são cinza e só aparecem ao habilitar **Incluir arquivadas**. É possível ajustar a opacidade e ocultar os nomes; os nomes selecionados continuam visíveis.
+
+O **Corte horizontal por altura Z** exibe a parte de cada bloco abaixo da altura escolhida, permitindo examinar o interior. Os diagnósticos sempre consideram os volumes completos de todas as regiões ativas válidas, independentemente dos filtros. Sobreposições e contenções aparecem em uma lista com o volume de interseção; o volume compartilhado aparece em vermelho quando ambos os blocos estão visíveis. Contatos por face, aresta ou ponto aparecem em uma lista separada porque os limites inclusivos podem gerar ambiguidade para TAGs na fronteira. Clique no conflito para isolar e enquadrar o par.
+
+Regiões ativas sem limites válidos aparecem como pendências e precisam ser corrigidas na aba **Regiões**. Arquivadas não participam dos diagnósticos. A inspeção é somente leitura e acompanha as atualizações da base. Se o navegador não conseguir iniciar WebGL, as listas e os diagnósticos continuam disponíveis.
+
+Espaços vazios ajudam a revisar visualmente a cobertura, mas não comprovam uma falha: a detecção automática de lacunas exige definir o volume que deveria estar coberto, ainda não cadastrado nesta versão.
+
+### Cadastro e conflitos
+
 Em **Regiões**, informe ID único, nome e os seis limites. Para cada eixo, mínimo < máximo. O ID deve ser válido para o Firestore: não vazio, sem `/`, com até 1500 bytes e sem nomes reservados. Documentos legados sem limites aparecem para edição e não participam da identificação espacial.
 
 A interface detecta sobreposição parcial, contenção total e contato de fronteira. Contatos por face, aresta ou ponto podem produzir ambiguidade porque os limites são inclusivos. Para salvar conflitos, é necessário marcar que os limites foram revisados. Qualquer alteração nos valores ou conflitos exige novo reconhecimento. A criação verifica IDs existentes em transação, inclusive os arquivados.
