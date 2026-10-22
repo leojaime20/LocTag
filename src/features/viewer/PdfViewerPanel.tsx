@@ -66,8 +66,18 @@ export function PdfViewerPanel({ view, title, context, isVisible, onReady }: Pro
               : 'Aguardando seleção'}
         </p>
       </div>
-      {position.error && context && <p className="notice-error">{position.error}</p>}
-      {pdfUrl ? (
+      {position.error && context && !context.drawingsLoading && !context.drawingsError && (
+        <p className="notice-error">{position.error}</p>
+      )}
+      {context?.drawingsError ? (
+        <p role="alert" className="notice-error">
+          Não foi possível carregar os desenhos. A consulta 3D continua disponível.
+        </p>
+      ) : context?.drawingsLoading ? (
+        <div className="viewer-placeholder" role="status">
+          Carregando desenhos…
+        </div>
+      ) : pdfUrl ? (
         <Suspense fallback={<div className="viewer-placeholder">Preparando visualizador…</div>}>
           <EmbedPdfSurface
             key={`${pdfUrl}:${drawing?.pageIndex ?? 0}`}

@@ -5,10 +5,12 @@ import {
   useRef,
   type ComponentRef,
   type ReactNode,
+  type RefObject,
 } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { Edges, OrbitControls } from '@react-three/drei';
 import { CanvasTexture, PerspectiveCamera, SRGBColorSpace, Vector3 } from 'three';
+import type { SpatialCamera } from './camera';
 import type { RegionBounds } from '../../types/domain';
 import {
   boundsCenter,
@@ -29,10 +31,15 @@ interface SceneProps {
   selectedId: string | null;
   highlightedIds: string[];
   opacity: number;
-  labels: boolean;
+  labels: boolean | 'none';
+  marker?: [number, number, number];
+  cameraKey?: string;
+  savedCameraRef?: RefObject<SpatialCamera | null>;
+  zoom?: { step: number; serial: number };
+  maxDpr?: number;
   cut: number | null;
   conflicts: RegionMapConflict[];
-  onSelect: (id: string) => void;
+  onSelect?: (id: string) => void;
 }
 
 function CameraRig({
@@ -40,13 +47,52 @@ function CameraRig({
   focusBounds,
   view,
   frame,
-}: Pick<SceneProps, 'bounds' | 'focusBounds' | 'view' | 'frame'>) {
+  cameraKey,
+  savedCameraRef,
+  zoom,
+}: Pick<
+  SceneProps,
+  'bounds' | 'focusBounds' | 'view' | 'frame' | 'cameraKey' | 'savedCameraRef' | 'zoom'
+>) {
   const controls = useRef<ComponentRef<typeof OrbitControls>>(null);
   const { get, size, invalidate } = useThree();
+  const lastZoom = useRef(zoom?.serial);
+  const activeKey = useRef(cameraKey);
+  const save = () => {
+    const { camera } = get();
+    if (
+      !savedCameraRef ||
+      !activeKey.current ||
+      !(camera instanceof PerspectiveCamera) ||
+      !controls.current
+    )
+      return;
+    savedCameraRef.current = {
+      key: activeKey.current,
+      position: camera.position.toArray(),
+      target: controls.current.target.toArray(),
+      up: camera.up.toArray(),
+      near: camera.near,
+      far: camera.far,
+    };
+  };
   useLayoutEffect(() => {
     // The camera is an imperative Three.js object owned by the renderer.
     const { camera } = get();
+    activeKey.current = cameraKey;
     if (!(camera instanceof PerspectiveCamera) || !controls.current) return;
+    const restored = savedCameraRef?.current;
+    if (cameraKey && restored?.key === cameraKey) {
+      camera.position.fromArray(restored.position);
+      camera.up.fromArray(restored.up);
+      camera.near = restored.near;
+      camera.far = restored.far;
+      camera.updateProjectionMatrix();
+      controls.current.target.fromArray(restored.target);
+      controls.current.update();
+      invalidate();
+      return;
+    }
     const scale = 1 / Math.max(...boundsSize(bounds));
     const origin = new Vector3(...boundsCenter(bounds));
     const target = new Vector3(...boundsCenter(focusBounds)).sub(origin).multiplyScalar(scale);
@@ -72,11 +118,34 @@ function CameraRig({
     controls.current.target.copy(target);
     controls.current.update();
     invalidate();
-  }, [bounds, focusBounds, view, frame, get, size.width, size.height, invalidate]);
+  }, [
+    bounds,
+    focusBounds,
+    view,
+    frame,
+    get,
+    size.width,
+    size.height,
+    invalidate,
+    cameraKey,
+    savedCameraRef,
+  ]);
+  useLayoutEffect(() => {
+    if (!zoom || lastZoom.current === zoom.serial || !controls.current) return;
+    lastZoom.current = zoom.serial;
+    const { camera } = get();
+    camera.position
+      .sub(controls.current.target)
+      .multiplyScalar(zoom.step > 0 ? 0.8 : 1.25)
+      .add(controls.current.target);
+    controls.current.update();
+    invalidate();
+  }, [zoom, get, invalidate]);
   return (
     <OrbitControls
       ref={controls}
       makeDefault
+      onChange={save}
       enableDamping={false}
       minDistance={0.0001}
       maxDistance={50}
@@ -192,6 +261,56 @@ function Block({
   );
 }
 
+function TagMarker({ position }: { position: [number, number, number] }) {
+  const { size } = useThree();
+  const texture = useMemo(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d')!;
+    ctx.beginPath();
+    ctx.arc(32, 32, 26, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#07180e';
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(32, 32, 18, 0, Math.PI * 2);
+    ctx.fillStyle = '#e11d48';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(32, 20);
+    ctx.lineTo(32, 44);
+    ctx.moveTo(20, 32);
+    ctx.lineTo(44, 32);
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    const map = new CanvasTexture(canvas);
+    map.colorSpace = SRGBColorSpace;
+    return map;
+  }, []);
+  useLayoutEffect(() => () => texture.dispose(), [texture]);
+  const scale = (32 * 2 * Math.tan((21 * Math.PI) / 180)) / size.height;
+  return (
+    <sprite
+      name="selected-tag-marker"
+      position={position}
+      scale={[scale, scale, 1]}
+      renderOrder={2000}
+    >
+      <spriteMaterial
+        map={texture}
+        transparent
+        depthTest={false}
+        depthWrite={false}
+        sizeAttenuation={false}
+      />
+    </sprite>
+  );
+}
+
 class SceneBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
   state = { failed: false };
   static getDerivedStateFromError() {
@@ -203,7 +322,7 @@ class SceneBoundary extends Component<{ children: ReactNode }, { failed: boolean
         <div role="alert" className="p-6 space-y-3">
           <p>
             Não foi possível abrir o mapa 3D. Verifique o suporte a WebGL e a aceleração gráfica do
-            navegador. As listas e os diagnósticos continuam disponíveis.
+            navegador. As outras visualizações e informações continuam disponíveis.
           </p>
           <button className="button-secondary" onClick={() => this.setState({ failed: false })}>
             Tentar abrir o mapa novamente
@@ -225,11 +344,11 @@ export default function RegionMapScene(props: SceneProps) {
     <SceneBoundary>
       <Canvas
         frameloop="demand"
-        dpr={[1, 2]}
+        dpr={[1, props.maxDpr ?? 2]}
         camera={{ fov: 42, position: [2, -2, 2], up: [0, 0, 1] }}
         fallback={
           <p className="p-6" role="alert">
-            Seu navegador não oferece WebGL. Use as listas de regiões e conflitos abaixo.
+            Seu navegador não oferece WebGL. As outras visualizações continuam disponíveis.
           </p>
         }
       >
@@ -239,6 +358,9 @@ export default function RegionMapScene(props: SceneProps) {
           focusBounds={props.focusBounds}
           view={props.view}
           frame={props.frame}
+          cameraKey={props.cameraKey}
+          savedCameraRef={props.savedCameraRef}
+          zoom={props.zoom}
         />
         <gridHelper
           args={[2, 20, '#9cafa2', '#d4e0d8']}
@@ -259,11 +381,12 @@ export default function RegionMapScene(props: SceneProps) {
               opacity={opacity}
               emphasized={selectedId === region.id || highlightedIds.includes(region.id)}
               label={
-                labels || selectedId === region.id || highlightedIds.includes(region.id)
+                labels !== 'none' &&
+                (labels || selectedId === region.id || highlightedIds.includes(region.id))
                   ? region.name
                   : undefined
               }
-              onSelect={() => onSelect(region.id)}
+              onSelect={onSelect ? () => onSelect(region.id) : undefined}
             />
           );
         })}
@@ -287,6 +410,17 @@ export default function RegionMapScene(props: SceneProps) {
               )
             );
           })}
+        {props.marker && (
+          <TagMarker
+            position={
+              props.marker.map((value, index) => (value - origin[index]) * scale) as [
+                number,
+                number,
+                number,
+              ]
+            }
+          />
+        )}
         {cut !== null && (
           <mesh position={[0, 0, (cut - origin[2]) * scale]}>
             <planeGeometry args={[1.3, 1.3]} />

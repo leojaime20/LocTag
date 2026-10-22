@@ -1,15 +1,18 @@
-import { useState } from 'react';
-
 import type { SelectedTagContext } from '../../types/domain';
 
 interface TagSummaryProps {
   context: SelectedTagContext | null;
   isLoading: boolean;
+  isCollapsed: boolean;
+  onCollapsedChange: (value: boolean) => void;
 }
 
-export function TagSummary({ context, isLoading }: TagSummaryProps) {
-  const [isCollapsed, setCollapsed] = useState(false);
-
+export function TagSummary({
+  context,
+  isLoading,
+  isCollapsed,
+  onCollapsedChange,
+}: TagSummaryProps) {
   if (isLoading) {
     return <section className="panel text-sm text-slate-500">Carregando resumo da tag...</section>;
   }
@@ -21,8 +24,11 @@ export function TagSummary({ context, isLoading }: TagSummaryProps) {
   if (isCollapsed) {
     return (
       <section className="panel flex items-center justify-between gap-3">
-        <span className="font-semibold text-slate-900">{context.tag.tag}</span>
-        <button className="button-secondary" type="button" onClick={() => setCollapsed(false)}>
+        <div className="min-w-0 break-words">
+          <span className="font-semibold text-slate-900">{context.tag.tag}</span>
+          <p className="text-sm text-slate-500">{context.resolution.label}</p>
+        </div>
+        <button className="button-secondary" type="button" onClick={() => onCollapsedChange(false)}>
           Expandir
         </button>
       </section>
@@ -63,7 +69,7 @@ export function TagSummary({ context, isLoading }: TagSummaryProps) {
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-blue-600">Resumo</p>
           <h2 className="mt-1 text-xl font-semibold text-slate-950">{context.tag.tag}</h2>
         </div>
-        <button className="button-secondary" type="button" onClick={() => setCollapsed(true)}>
+        <button className="button-secondary" type="button" onClick={() => onCollapsedChange(true)}>
           Recolher
         </button>
       </div>

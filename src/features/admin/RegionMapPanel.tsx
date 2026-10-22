@@ -11,7 +11,7 @@ import {
   type RegionMapConflict,
   type RegionMapView,
 } from '../../utils/regionMap';
-import RegionMapScene from './RegionMapScene';
+import RegionMapScene from '../spatial/RegionScene';
 
 const number = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 3 });
 const views = [

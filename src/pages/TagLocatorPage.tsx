@@ -9,6 +9,10 @@ import type { EquipmentTag } from '../types/domain';
 
 export default function TagLocatorPage() {
   const [selectedTag, setSelectedTag] = useState<EquipmentTag | null>(null);
+  const [summaryCollapsed, setSummaryCollapsed] = useState(false);
+  const change3D = (value: boolean) => {
+    if (value && window.matchMedia('(max-width: 767px)').matches) setSummaryCollapsed(true);
+  };
   const selectedContext = useSelectedTagContext(selectedTag);
   const selected = selectedContext.data ?? null;
 
@@ -34,7 +38,12 @@ export default function TagLocatorPage() {
           </p>
         </section>
 
-        <TagSummary context={selected} isLoading={selectedContext.isFetching} />
+        <TagSummary
+          context={selected}
+          isLoading={selectedContext.isFetching}
+          isCollapsed={summaryCollapsed}
+          onCollapsedChange={setSummaryCollapsed}
+        />
 
         {selected?.drawings?.exampleRegionId && (
           <p className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
@@ -45,12 +54,17 @@ export default function TagLocatorPage() {
 
         {selectedContext.isError && (
           <section className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-            Não foi possível carregar região/PDFs da tag selecionada. Verifique as permissões do
-            Firestore e os caminhos no Firebase Storage.
+            Não foi possível carregar a TAG ou suas regiões. Verifique a conexão e tente selecionar
+            a TAG novamente.
           </section>
         )}
 
-        <ViewerWorkspace context={selected} isLoading={selectedContext.isFetching} />
+        <ViewerWorkspace
+          context={selected}
+          regions={selectedContext.regions}
+          isLoading={selectedContext.isFetching}
+          on3DChange={change3D}
+        />
       </section>
     </main>
   );

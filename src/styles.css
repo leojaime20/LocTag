@@ -472,3 +472,103 @@ input {
     min-height: 360px;
   }
 }
+
+.query-view-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding: 4px;
+  border: 1px solid var(--petrobras-border);
+  border-radius: 12px;
+  background: white;
+}
+.query-view-tabs .segmented-button {
+  min-width: 0;
+  padding: 0 8px;
+}
+.tag-region-viewer {
+  min-width: 0;
+  border: 1px solid var(--petrobras-border);
+  border-radius: 16px;
+  background: white;
+  overflow: hidden;
+}
+.tag-region-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px;
+  border-bottom: 1px solid var(--petrobras-border);
+}
+.tag-region-toolbar .button-secondary {
+  font-size: 13px;
+  padding-inline: 10px;
+}
+.tag-region-canvas {
+  height: min(56svh, 600px);
+  min-height: 200px;
+  position: relative;
+  background: #f0f5f2;
+  overflow: hidden;
+}
+.tag-region-canvas canvas {
+  touch-action: none;
+}
+.tag-region-caption {
+  padding: 10px 12px;
+  color: var(--petrobras-muted);
+  font-size: 12px;
+  display: grid;
+  gap: 4px;
+}
+.tag-marker-legend {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background: #e11d48;
+  border-radius: 50%;
+  margin-right: 4px;
+}
+.tag-region-dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: 100%;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
+  background: white;
+}
+.tag-region-dialog::backdrop {
+  background: #07180ecc;
+}
+.tag-region-viewer.is-expanded {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border: 0;
+  border-radius: 0;
+}
+.tag-region-viewer.is-expanded .tag-region-canvas {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+}
+.tag-region-viewer.is-expanded .tag-region-toolbar,
+.tag-region-viewer.is-expanded .tag-region-caption {
+  flex-shrink: 0;
+}
+@media (min-width: 768px) {
+  .query-view-tabs {
+    display: none;
+  }
+}
+@media (max-height: 450px) and (orientation: landscape) {
+  .tag-region-canvas {
+    min-height: 160px;
+  }
+  .tag-region-viewer.is-expanded .tag-region-caption {
+    display: none;
+  }
+}

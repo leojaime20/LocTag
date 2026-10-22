@@ -4,9 +4,10 @@ import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../services/firebase/config';
 import { resolveStorageUrl } from '../services/firebase/storage';
 import { normalizeTag } from '../types/firebase';
-import type { EquipmentTag, SelectedTagContext, VolumeRegion } from '../types/domain';
+import type { EquipmentTag, Region, SelectedTagContext, VolumeRegion } from '../types/domain';
 import { hasValidBounds, resolveRegion } from '../utils/regions';
 import { useSpatialData } from './useSpatialData';
+const emptyRegions: Region[] = [];
 
 export function useSelectedTagContext(selected: EquipmentTag | null) {
   const client = useQueryClient();
@@ -32,7 +33,7 @@ export function useSelectedTagContext(selected: EquipmentTag | null) {
     );
   }, [client, id]);
   const tag = liveTag.data === undefined ? selected : liveTag.data;
-  const regions = spatial.regions.data ?? [];
+  const regions = spatial.regions.data ?? emptyRegions;
   const resolution = tag
     ? resolveRegion(tag, regions.filter((r) => !r.archived && hasValidBounds(r)) as VolumeRegion[])
     : null;
@@ -54,31 +55,29 @@ export function useSelectedTagContext(selected: EquipmentTag | null) {
     staleTime: Infinity,
   });
   const data: SelectedTagContext | null =
-    tag && urls.data && resolution
+    tag && resolution && spatial.regions.isSuccess && !spatial.regions.isError && !liveTag.isError
       ? {
           tag,
           drawings,
           legacyRegion,
           resolution,
-          plantPdfUrl: urls.data[0],
-          sidePdfUrl: urls.data[1],
+          plantPdfUrl: urls.data?.[0] ?? null,
+          sidePdfUrl: urls.data?.[1] ?? null,
+          drawingsLoading:
+            spatial.drawings.isPending || (urls.isPending && !spatial.drawings.isError),
+          drawingsError: spatial.drawings.isError || urls.isError,
         }
       : null;
   return {
     data,
+    regions,
     isFetching:
       Boolean(selected) &&
       !data &&
       liveTag.data !== null &&
       !liveTag.isError &&
-      !urls.isError &&
-      !spatial.regions.isError &&
-      !spatial.drawings.isError,
+      !spatial.regions.isError,
     isError:
-      liveTag.isError ||
-      urls.isError ||
-      spatial.regions.isError ||
-      spatial.drawings.isError ||
-      Boolean(selected && liveTag.data === null),
+      liveTag.isError || spatial.regions.isError || Boolean(selected && liveTag.data === null),
   };
 }

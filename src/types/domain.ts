@@ -76,6 +76,8 @@ export interface RegionResolution {
   height: number | null;
 }
 export interface SelectedTagContext {
+  drawingsLoading?: boolean;
+  drawingsError?: boolean;
   tag: EquipmentTag;
   resolution: RegionResolution;
   drawings: GlobalDrawings | null;
