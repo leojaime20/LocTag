@@ -58,11 +58,27 @@ input {
   font: inherit;
 }
 
-.app-loading {
+.splash-screen {
   display: grid;
   min-height: 100vh;
+  min-height: 100dvh;
   place-items: center;
-  color: var(--petrobras-muted);
+  overflow: hidden;
+  background: #03180e;
+}
+
+.splash-image {
+  display: block;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  object-fit: cover;
+}
+
+@media (max-aspect-ratio: 4/3) {
+  .splash-image {
+    object-fit: contain;
+  }
 }
 
 .panel {
