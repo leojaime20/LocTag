@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 
 import { TagSearch } from '../features/tags/TagSearch';
 import { TagSummary } from '../features/tags/TagSummary';
@@ -8,12 +8,13 @@ import { useSelectedTagContext } from '../hooks/useSelectedTagContext';
 import type { EquipmentTag } from '../types/domain';
 
 export default function TagLocatorPage() {
+  const { projectId = 'p84' } = useParams();
   const [selectedTag, setSelectedTag] = useState<EquipmentTag | null>(null);
   const [summaryCollapsed, setSummaryCollapsed] = useState(false);
   const change3D = (value: boolean) => {
     if (value && window.matchMedia('(max-width: 767px)').matches) setSummaryCollapsed(true);
   };
-  const selectedContext = useSelectedTagContext(selectedTag);
+  const selectedContext = useSelectedTagContext(selectedTag, projectId);
   const selected = selectedContext.data ?? null;
 
   return (
@@ -22,17 +23,22 @@ export default function TagLocatorPage() {
         <header className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-xs font-medium uppercase tracking-[0.18em] text-blue-600">LocTag</p>
-            <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950">Busca TAG</h1>
+            <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950">
+              {projectId.toUpperCase()} · Busca TAG
+            </h1>
           </div>
           <div className="flex flex-col gap-2 md:items-end">
-            <Link className="text-sm font-semibold text-blue-600" to="/admin">
+            <Link className="text-sm font-semibold text-blue-600" to="/">
+              Projetos
+            </Link>
+            <Link className="text-sm font-semibold text-blue-600" to={`/admin/${projectId}`}>
               Administração
             </Link>
           </div>
         </header>
 
         <section className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm md:p-4">
-          <TagSearch onSelect={setSelectedTag} />
+          <TagSearch projectId={projectId} onSelect={setSelectedTag} />
           <p className="mt-2 text-sm text-slate-500">
             Busque uma TAG para localizar o equipamento nos desenhos globais.
           </p>

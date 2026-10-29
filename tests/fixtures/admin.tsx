@@ -29,10 +29,14 @@ const regions: Region[] = [
   },
 ];
 const client = new QueryClient();
-client.setQueryData(['admin-tags'], []);
-client.setQueryData(['regions'], regions);
+client.setQueryData(['admin-tags', 'p84'], []);
+client.setQueryData(['regions', 'p84'], regions);
 export function RegionsFixture() {
-  const query = useQuery({ queryKey: ['regions'], queryFn: () => regions, staleTime: Infinity });
+  const query = useQuery({
+    queryKey: ['regions', 'p84'],
+    queryFn: () => regions,
+    staleTime: Infinity,
+  });
   return <RegionManager regions={query.data ?? []} />;
 }
 const drawing = { path: new URL('./drawing.pdf', location.href).href, pageIndex: 0, calibration };
@@ -48,7 +52,7 @@ const mode = new URLSearchParams(location.search).get('mode');
 const params = new URLSearchParams(location.search);
 if (mode === 'csv' && params.has('export')) {
   client.setQueryData(
-    ['admin-tags'],
+    ['admin-tags', 'p84'],
     Array.from({ length: 205 }, (_, index) => ({
       id: `P-${index}`,
       tag: `P-${index}`,

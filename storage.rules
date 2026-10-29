@@ -2,17 +2,18 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-    function isAdmin() {
-      return request.auth != null
+    function signedIn() { return request.auth != null && request.auth.token.email != null; }
+    function isMaster() { return signedIn() && request.auth.token.email == 'leojaime20@gmail.com'; }
+    function userPath() { return /databases/(default)/documents/authorizedUsers/$(request.auth.token.email); }
+    function hasProjectAccess(projectId) {
+      return isMaster() || (signedIn() && firestore.exists(userPath())
+        && firestore.get(userPath()).data.role == 'admin'
         && (
-          request.auth.token.email == "leojaime20@gmail.com"
-          || firestore.get(/databases/(default)/documents/authorizedUsers/$(request.auth.token.email)).data.role == "admin"
-        );
+          ('projectIds' in firestore.get(userPath()).data && projectId in firestore.get(userPath()).data.projectIds)
+          || (!('projectIds' in firestore.get(userPath()).data) && projectId == 'p84')
+        ));
     }
-
-    match /pdfs/{fileName} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
+    match /pdfs/{fileName} { allow read: if true; allow write: if hasProjectAccess('p84'); }
+    match /projects/{projectId}/pdfs/{fileName} { allow read: if true; allow write: if hasProjectAccess(projectId); }
   }
 }

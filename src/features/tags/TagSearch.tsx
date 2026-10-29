@@ -5,13 +5,14 @@ import type { EquipmentTag } from '../../types/domain';
 
 interface TagSearchProps {
   onSelect: (tag: EquipmentTag) => void;
+  projectId?: string;
 }
 
-export function TagSearch({ onSelect }: TagSearchProps) {
+export function TagSearch({ onSelect, projectId }: TagSearchProps) {
   const [term, setTerm] = useState('');
   const [isOpen, setOpen] = useState(false);
   const deferredTerm = useDeferredValue(term);
-  const search = useTagSearch(deferredTerm, true);
+  const search = useTagSearch(deferredTerm, true, projectId);
   const results = search.data ?? [];
   const statusText = useMemo(() => {
     if (deferredTerm.trim().length < 2) return 'Digite ao menos 2 caracteres';

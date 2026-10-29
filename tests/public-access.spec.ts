@@ -3,6 +3,8 @@ import { test, expect } from '@playwright/test';
 test('visitante pode pesquisar sem login e administração continua protegida', async ({ page }) => {
   await page.route('**/firestore.googleapis.com/**', (route) => route.abort());
   await page.goto('/');
+  await expect(page.getByRole('heading', { name: 'Escolha um projeto' })).toBeVisible();
+  await page.getByRole('link', { name: /P84/ }).click();
   await expect(page.getByLabel('Pesquisar TAG')).toBeEnabled();
   await expect(page.getByRole('button', { name: 'Entrar com Google' })).toHaveCount(0);
   await expect(page.getByText('Login necessário')).toHaveCount(0);

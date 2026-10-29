@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { doc, getDoc, onSnapshot } from 'firebase/firestore';
-import { db } from '../services/firebase/config';
+import { getDoc, onSnapshot } from 'firebase/firestore';
+import { LEGACY_PROJECT_ID, projectDoc } from '../services/api/projects';
 import { resolveStorageUrl } from '../services/firebase/storage';
 import { normalizeTag } from '../types/firebase';
 import type { EquipmentTag, Region, SelectedTagContext, VolumeRegion } from '../types/domain';
@@ -9,14 +9,17 @@ import { hasValidBounds, resolveRegion } from '../utils/regions';
 import { useSpatialData } from './useSpatialData';
 const emptyRegions: Region[] = [];
 
-export function useSelectedTagContext(selected: EquipmentTag | null) {
+export function useSelectedTagContext(
+  selected: EquipmentTag | null,
+  projectId = LEGACY_PROJECT_ID,
+) {
   const client = useQueryClient();
-  const spatial = useSpatialData(Boolean(selected));
+  const spatial = useSpatialData(Boolean(selected), projectId);
   const liveTag = useQuery({
-    queryKey: ['tag', selected?.id],
+    queryKey: ['tag', projectId, selected?.id],
     enabled: Boolean(selected),
     queryFn: async () => {
-      const snapshot = await getDoc(doc(db, 'tags', selected!.id));
+      const snapshot = await getDoc(projectDoc(projectId, 'tags', selected!.id));
       return snapshot.exists() ? normalizeTag(snapshot.id, snapshot.data()) : null;
     },
   });
@@ -24,14 +27,17 @@ export function useSelectedTagContext(selected: EquipmentTag | null) {
   useEffect(() => {
     if (!id) return;
     return onSnapshot(
-      doc(db, 'tags', id),
+      projectDoc(projectId, 'tags', id),
       (snap) =>
-        client.setQueryData(['tag', id], snap.exists() ? normalizeTag(snap.id, snap.data()) : null),
+        client.setQueryData(
+          ['tag', projectId, id],
+          snap.exists() ? normalizeTag(snap.id, snap.data()) : null,
+        ),
       () => {
-        void client.invalidateQueries({ queryKey: ['tag', id] });
+        void client.invalidateQueries({ queryKey: ['tag', projectId, id] });
       },
     );
-  }, [client, id]);
+  }, [client, id, projectId]);
   const tag = liveTag.data === undefined ? selected : liveTag.data;
   const regions = spatial.regions.data ?? emptyRegions;
   const resolution = tag
@@ -49,7 +55,7 @@ export function useSelectedTagContext(selected: EquipmentTag | null) {
     drawings?.side.path ?? legacyRegion?.sidePdf ?? '',
   ];
   const urls = useQuery({
-    queryKey: ['drawing-urls', ...paths],
+    queryKey: ['drawing-urls', projectId, ...paths],
     queryFn: () => Promise.all(paths.map(resolveStorageUrl)),
     enabled: Boolean(tag) && spatial.drawings.isSuccess && spatial.regions.isSuccess,
     staleTime: Infinity,

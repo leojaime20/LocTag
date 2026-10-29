@@ -44,9 +44,9 @@ const drawings: GlobalDrawings = {
 const client = new QueryClient({
   defaultOptions: { queries: { staleTime: Infinity, retry: false } },
 });
-client.setQueryData(['tag', tag.id], tag);
-client.setQueryData(['regions'], [region]);
-client.setQueryData(['global-drawings'], drawings);
+client.setQueryData(['tag', 'p84', tag.id], tag);
+client.setQueryData(['regions', 'p84'], [region]);
+client.setQueryData(['global-drawings', 'p84'], drawings);
 
 export function Fixture() {
   const selected = useSelectedTagContext(tag);

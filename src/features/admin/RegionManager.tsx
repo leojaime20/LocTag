@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import type { Region, VolumeRegion } from '../../types/domain';
+import { LEGACY_PROJECT_ID } from '../../services/api/projects';
 import { archiveRegion, deleteRegion, saveVolumeRegion } from '../../services/api/drawings';
 import { hasValidBounds, regionConflict } from '../../utils/regions';
 import { NumberField } from './GlobalDrawingManager';
@@ -14,7 +15,13 @@ const empty: VolumeRegion = {
   zMin: NaN,
   zMax: NaN,
 };
-export function RegionManager({ regions }: { regions: Region[] }) {
+export function RegionManager({
+  regions,
+  projectId = LEGACY_PROJECT_ID,
+}: {
+  regions: Region[];
+  projectId?: string;
+}) {
   const client = useQueryClient();
   const [form, setForm] = useState<VolumeRegion>(empty),
     [creating, setCreating] = useState(true);
@@ -31,7 +38,7 @@ export function RegionManager({ regions }: { regions: Region[] }) {
     : [];
   const conflictKey = JSON.stringify([form, conflicts]);
   const save = useMutation({
-    mutationFn: () => saveVolumeRegion(form, creating),
+    mutationFn: () => saveVolumeRegion(form, creating, projectId),
     onSuccess: () => {
       setForm(empty);
       setCreating(true);
@@ -40,9 +47,9 @@ export function RegionManager({ regions }: { regions: Region[] }) {
   });
   const remove = useMutation({
     mutationFn: ({ id, permanent }: { id: string; permanent: boolean }) =>
-      permanent ? deleteRegion(id) : archiveRegion(id),
+      permanent ? deleteRegion(id, projectId) : archiveRegion(id, projectId),
     onSuccess: (_, { id, permanent }) => {
-      client.setQueryData<Region[]>(['regions'], (current) =>
+      client.setQueryData<Region[]>(['regions', projectId], (current) =>
         permanent
           ? current?.filter((region) => region.id !== id)
           : current?.map((region) => (region.id === id ? { ...region, archived: true } : region)),

@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import type { CalibrationPoint, Drawing, GlobalDrawings, ViewKind } from '../../types/domain';
+import { LEGACY_PROJECT_ID, projectPdfPath } from '../../services/api/projects';
 import { saveGlobalDrawings, uploadGlobalPdf } from '../../services/api/drawings';
 import { fitAffine } from '../../utils/calibration';
 import { CalibrationPdfPicker } from './CalibrationPdfPicker';
@@ -50,11 +51,13 @@ function DrawingEditor({
   drawing,
   onChange,
   onUploading,
+  projectId,
 }: {
   view: ViewKind;
   drawing: Drawing;
   onChange: (drawing: Drawing) => void;
   onUploading: (busy: boolean) => void;
+  projectId: string;
 }) {
   const [active, setActive] = useState<number | null>(null);
   const [progress, setProgress] = useState<number | null>(null),
@@ -90,7 +93,7 @@ function DrawingEditor({
     setProgress(0);
     onUploading(true);
     try {
-      const path = await uploadGlobalPdf(view, file, setProgress);
+      const path = await uploadGlobalPdf(view, file, setProgress, projectId);
       changePdf(path);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Falha no upload.');
@@ -128,7 +131,7 @@ function DrawingEditor({
         </p>
       )}
       <label className="field">
-        Caminho no Storage (pdfs/…)
+        Caminho no Storage ({projectPdfPath(projectId, '')}…)
         <input
           value={drawing.path}
           disabled={progress !== null}
@@ -261,16 +264,25 @@ function DrawingEditor({
     </section>
   );
 }
-export function GlobalDrawingManager({ initial }: { initial: GlobalDrawings | null }) {
+export function GlobalDrawingManager({
+  initial,
+  projectId = LEGACY_PROJECT_ID,
+}: {
+  initial: GlobalDrawings | null;
+  projectId?: string;
+}) {
   const [form, setForm] = useState(initial ?? emptyGlobals);
   const [uploading, setUploading] = useState({ plant: false, side: false });
-  const mutation = useMutation({ mutationFn: saveGlobalDrawings });
+  const mutation = useMutation({
+    mutationFn: (config: GlobalDrawings) => saveGlobalDrawings(config, projectId),
+  });
   return (
     <section className="space-y-4">
       <div className="panel">
         <h2 className="text-xl font-semibold">Desenhos globais</h2>
         <p className="text-sm text-slate-500 mt-2">
           Configuração em metros. Os uploads recebem novos caminhos e não apagam os PDFs existentes.
+          Caminho deste projeto: {projectPdfPath(projectId, '')}.
         </p>
         <label className="mt-4 flex items-start gap-2 text-sm text-slate-700">
           <input
@@ -279,7 +291,15 @@ export function GlobalDrawingManager({ initial }: { initial: GlobalDrawings | nu
             onChange={(event) => {
               const base = { ...form };
               delete base.exampleRegionId;
-              setForm(event.target.checked ? { ...base, exampleRegionId: 'EXEMPLO-NAVIO' } : base);
+              setForm(
+                event.target.checked
+                  ? {
+                      ...base,
+                      exampleRegionId:
+                        projectId === LEGACY_PROJECT_ID ? 'EXEMPLO-NAVIO' : 'exemplo',
+                    }
+                  : base,
+              );
             }}
           />
           Usar estes PDFs apenas na região ilustrativa. Desmarque ao cadastrar desenhos reais para
@@ -314,6 +334,7 @@ export function GlobalDrawingManager({ initial }: { initial: GlobalDrawings | nu
       <div className="grid gap-4 xl:grid-cols-2">
         {(['plant', 'side'] as const).map((view) => (
           <DrawingEditor
+            projectId={projectId}
             key={view}
             view={view}
             drawing={form[view]}

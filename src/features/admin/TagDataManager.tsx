@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 
+import { LEGACY_PROJECT_ID } from '../../services/api/projects';
 import { getAllTags, replaceAllTags } from '../../services/api/admin';
 import { hasValidBounds, resolveRegion } from '../../utils/regions';
 import type { Region, VolumeRegion } from '../../types/domain';
@@ -28,9 +29,11 @@ function readFileAsText(file: File): Promise<string> {
 export function TagDataManager({
   regions,
   regionsReady,
+  projectId = LEGACY_PROJECT_ID,
 }: {
   regions: Region[];
   regionsReady: boolean;
+  projectId?: string;
 }) {
   const volumes = useMemo(
     () => regions.filter((r) => !r.archived && hasValidBounds(r)) as VolumeRegion[],
@@ -41,8 +44,8 @@ export function TagDataManager({
   const [includeLocation, setIncludeLocation] = useState(false);
   const [preview, setPreview] = useState<ImportPreview | null>(null);
   const tagsQuery = useQuery({
-    queryKey: ['admin-tags'],
-    queryFn: getAllTags,
+    queryKey: ['admin-tags', projectId],
+    queryFn: () => getAllTags(projectId),
     staleTime: 30_000,
   });
 
@@ -72,15 +75,15 @@ export function TagDataManager({
   }, [filter, tags, volumes]);
 
   const replaceMutation = useMutation({
-    mutationFn: replaceAllTags,
+    mutationFn: (tags: EquipmentTag[]) => replaceAllTags(tags, projectId),
     onError: () => {
-      void queryClient.invalidateQueries({ queryKey: ['admin-tags'] });
+      void queryClient.invalidateQueries({ queryKey: ['admin-tags', projectId] });
     },
     onSuccess: () => {
       setPreview(null);
-      void queryClient.invalidateQueries({ queryKey: ['admin-tags'] });
-      void queryClient.invalidateQueries({ queryKey: ['tag-search'] });
-      void queryClient.invalidateQueries({ queryKey: ['tag'] });
+      void queryClient.invalidateQueries({ queryKey: ['admin-tags', projectId] });
+      void queryClient.invalidateQueries({ queryKey: ['tag-search', projectId] });
+      void queryClient.invalidateQueries({ queryKey: ['tag', projectId] });
     },
   });
 

@@ -1,18 +1,18 @@
 # LocTag 2.0 — configuração e operação
 
-## Acesso
+## Acesso e projetos
 
-A consulta de dados e PDFs é pública, sem login ou cadastro prévio. Para administrar, acesse o link "Administração" e entre com e-mail e senha ou Google usando um usuário cadastrado em `authorizedUsers/{email}` com `role: "admin"`. As regras do Firestore continuam restringindo a edição a administradores independentemente da interface.
+A consulta de TAGs e PDFs é pública. A tela inicial lista os projetos; P84 é o primeiro e permanece nas coleções e nos PDFs originais. Projetos novos têm dados separados em `projects/{id}/...` e `projects/{id}/pdfs/...`.
 
-Para contas com senha, habilite o provedor **E-mail/senha** no Firebase Authentication, crie a conta e cadastre o mesmo e-mail em `authorizedUsers`. Senhas ficam apenas no Firebase Authentication; nunca devem ser gravadas no Firestore ou no repositório.
+Na administração, faça login e escolha um projeto. O administrador master (`leojaime20@gmail.com`) pode abrir **Projetos e acessos**, criar um projeto e selecionar os projetos de cada administrador. Cadastre a conta do usuário no Firebase Authentication antes de conceder acesso. O campo `projectIds` em `authorizedUsers/{email}` define as permissões; desmarcar todos os projetos revoga o acesso. Perfis antigos com `role: "admin"` e sem `projectIds` conservam acesso somente a P84. Senhas ficam apenas no Firebase Authentication.
 
-Antes de publicar esta versão, publique as regras atualizadas, que acrescentam `settings` e `drawingRevisions`:
+Antes de publicar a interface nova, publique as regras de Firestore e Storage:
 
 ```sh
-firebase deploy --only firestore:rules --project loctag-p84-p85
+firebase deploy --only firestore:rules,storage --project loctag-p84-p85
 ```
 
-O deploy e o exemplo de produção são descritos em [exemplo-producao.md](exemplo-producao.md).
+Nenhum documento ou PDF de P84 precisa ser migrado. Para projetos novos, cadastre regiões, TAGs e desenhos depois da criação.
 
 ## Unidades e referencial
 

@@ -2,6 +2,9 @@
 
 Aplicação React/TypeScript para localizar tags de equipamentos sobre desenhos técnicos em PDF.
 
+Manual simples de busca e compartilhamento, com capturas no formato de celular:
+[PDF](output/pdf/loctag-manual-celular.pdf) · [Versão em texto](docs/manual-usuario.md).
+
 ## Stack
 
 - React + TypeScript + Vite
@@ -24,13 +27,18 @@ Projeto criado:
 - O exemplo ilustrativo usa a região `EXEMPLO-NAVIO` e quatro TAGs `DEMO-*`.
 - Consulta pública de TAGs, regiões e PDFs, sem login ou cadastro prévio. Login com e-mail e senha ou Google é necessário apenas na administração.
 
-## Modelo de dados
+## Projetos e modelo de dados
 
-- `settings/globalDrawings`: dois PDFs, página, calibrações afins multiponto e zoom. Enquanto `exampleRegionId` estiver preenchido, os PDFs servem apenas à região ilustrativa; as demais TAGs usam seus PDFs regionais.
-- `drawingRevisions`: histórico reversível das configurações globais.
-- `regions`: nome e limites XYZ em metros; campos regionais legados preservados.
-- `tags`: modelo existente, incluindo `regionId` de compatibilidade e metadados opcionais `moduleRegion`, `owner` e `elevation`. Região efetiva e altura são calculadas em memória.
-- `authorizedUsers/{email}`: perfil administrativo; `role: "admin"` permite administrar. Não é necessário para consultar dados.
+A tela inicial permite escolher o projeto. **P84** é o projeto inicial e continua lendo e gravando nas coleções e nos PDFs existentes, sem migração dos dados. Projetos adicionais são cadastrados pelo administrador master e usam `projects/{id}/tags`, `regions`, `settings` e `drawingRevisions`, além de PDFs em `projects/{id}/pdfs/`. A busca, os desenhos e o CSV são isolados por projeto.
+
+- `settings/globalDrawings` (ou `projects/{id}/settings/globalDrawings`): dois PDFs, página, calibrações e zoom.
+- `drawingRevisions`: histórico das configurações globais.
+- `regions`: nome e limites XYZ em metros.
+- `tags`: TAGs e metadados opcionais.
+- `authorizedUsers/{email}`: `role: "admin"` e `projectIds: ["p84", "p85"]` concedem administração apenas aos projetos listados. Perfis antigos sem `projectIds` continuam administrando apenas P84. Uma lista vazia revoga o acesso administrativo.
+- O e-mail `leojaime20@gmail.com` é o administrador master nas regras do Firestore e Storage. Apenas ele pode criar projetos e definir permissões. A conta precisa existir no Firebase Authentication.
+
+A consulta continua pública; apenas a administração requer login. Publique **as regras do Firestore e do Storage antes da interface nova**: `firebase deploy --only firestore:rules,storage --project loctag-p84-p85`. O aplicativo não altera nem copia os documentos atuais de P84 durante a atualização.
 
 A configuração, calibração, migração, reversão, regras espaciais e CSV estão em [docs/admin-cadastro.md](docs/admin-cadastro.md).
 O cadastro do exemplo de produção está em [docs/exemplo-producao.md](docs/exemplo-producao.md).

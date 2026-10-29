@@ -2,38 +2,38 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    function isAdmin() {
-      return request.auth != null
-        && get(/databases/$(database)/documents/authorizedUsers/$(request.auth.token.email)).data.role == "admin";
+    function signedIn() { return request.auth != null && request.auth.token.email != null; }
+    function isMaster() { return signedIn() && request.auth.token.email == 'leojaime20@gmail.com'; }
+    function userPath() { return /databases/$(database)/documents/authorizedUsers/$(request.auth.token.email); }
+    function hasProjectAccess(projectId) {
+      return isMaster() || (signedIn() && exists(userPath())
+        && get(userPath()).data.role == 'admin'
+        && (
+          ('projectIds' in get(userPath()).data && projectId in get(userPath()).data.projectIds)
+          || (!('projectIds' in get(userPath()).data) && projectId == 'p84')
+        ));
     }
 
-    match /tags/{tagId} {
+    // P84 remains in its original collections. No migration or copy is required.
+    match /tags/{tagId} { allow read: if true; allow write: if hasProjectAccess('p84'); }
+    match /regions/{regionId} { allow read: if true; allow write: if hasProjectAccess('p84'); }
+    match /calibrations/{calibrationId} { allow read: if true; allow write: if hasProjectAccess('p84'); }
+    match /settings/{settingId} { allow read: if true; allow write: if hasProjectAccess('p84'); }
+    match /drawingRevisions/{revisionId} { allow read, write: if hasProjectAccess('p84'); }
+
+    match /projects/{projectId} {
       allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    match /regions/{regionId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    match /calibrations/{calibrationId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    match /settings/{settingId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    match /drawingRevisions/{revisionId} {
-      allow read, write: if isAdmin();
+      allow create, update, delete: if isMaster();
+      match /tags/{tagId} { allow read: if true; allow write: if hasProjectAccess(projectId); }
+      match /regions/{regionId} { allow read: if true; allow write: if hasProjectAccess(projectId); }
+      match /calibrations/{calibrationId} { allow read: if true; allow write: if hasProjectAccess(projectId); }
+      match /settings/{settingId} { allow read: if true; allow write: if hasProjectAccess(projectId); }
+      match /drawingRevisions/{revisionId} { allow read, write: if hasProjectAccess(projectId); }
     }
 
     match /authorizedUsers/{email} {
-      allow read: if request.auth != null && request.auth.token.email == email;
-      allow write: if isAdmin();
+      allow read: if isMaster() || (signedIn() && request.auth.token.email == email);
+      allow write: if isMaster();
     }
   }
 }
