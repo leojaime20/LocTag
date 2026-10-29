@@ -63,22 +63,18 @@ input {
   min-height: 100vh;
   min-height: 100dvh;
   place-items: center;
-  overflow: hidden;
-  background: #03180e;
+  padding: 24px;
+  background: #f4f8f5;
 }
 
 .splash-image {
   display: block;
-  width: 100%;
-  height: 100vh;
-  height: 100dvh;
-  object-fit: cover;
-}
-
-@media (max-aspect-ratio: 4/3) {
-  .splash-image {
-    object-fit: contain;
-  }
+  width: min(400px, 100%);
+  height: auto;
+  max-height: calc(100dvh - 48px);
+  object-fit: contain;
+  border-radius: 16px;
+  box-shadow: 0 16px 48px rgb(7 24 14 / 0.16);
 }
 
 .panel {
