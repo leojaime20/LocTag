@@ -16,7 +16,7 @@ import {
   boundsCenter,
   boundsSize,
   cutRegion,
-  regionColor,
+  colorForRegion,
   type MappedRegion,
   type RegionMapConflict,
   type RegionMapView,
@@ -377,7 +377,7 @@ export default function RegionMapScene(props: SceneProps) {
               bounds={section}
               origin={origin}
               scale={scale}
-              color={region.archived ? '#88978e' : regionColor(region.id)}
+              color={region.archived ? '#88978e' : colorForRegion(region)}
               opacity={opacity}
               emphasized={selectedId === region.id || highlightedIds.includes(region.id)}
               label={

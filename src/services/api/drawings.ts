@@ -6,6 +6,7 @@ import { normalizeRegion, type RawRegionDocument } from '../../types/firebase';
 import type { Drawing, GlobalDrawings, ViewKind, VolumeRegion } from '../../types/domain';
 import { fitAffine } from '../../utils/calibration';
 import { hasValidBounds } from '../../utils/regions';
+import { normalizeMacroArea } from '../../utils/macroArea';
 
 export const globalsRef = (projectId = LEGACY_PROJECT_ID) =>
   projectDoc(projectId, 'settings', 'globalDrawings');
@@ -119,7 +120,12 @@ export async function saveVolumeRegion(
       throw new Error('A região foi removida. Recarregue a lista.');
     transaction.set(
       reference,
-      { ...region, archived: false, updatedAt: serverTimestamp() },
+      {
+        ...region,
+        macroArea: normalizeMacroArea(region.macroArea),
+        archived: false,
+        updatedAt: serverTimestamp(),
+      },
       { merge: true },
     );
   });

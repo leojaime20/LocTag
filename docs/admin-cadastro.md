@@ -57,7 +57,7 @@ Com exatamente três referências o resíduo pode ser zero mesmo quando um ponto
 
 A aba **Mapa 3D** mostra as regiões como blocos proporcionais aos limites XYZ em metros, com Z na vertical. Arraste para girar, use a rolagem para zoom e o botão direito para deslocar. Em telas de toque, use um dedo para girar e dois para zoom e deslocamento. Os botões de vista superior (XY), frontal (XZ), lateral (YZ) e isométrica reposicionam a câmera; **Enquadrar tudo visível** ajusta a vista aos blocos exibidos.
 
-Selecione um bloco ou um nome na lista para consultar limites e dimensões, focar ou isolar a região. A busca por nome/ID e as caixas de seleção filtram a cena. **Restaurar visualização** limpa a busca, o isolamento e as regiões ocultas e desliga o corte. As cores são estáveis por ID; arquivadas são cinza e só aparecem ao habilitar **Incluir arquivadas**. É possível ajustar a opacidade e ocultar os nomes; os nomes selecionados continuam visíveis.
+Selecione um bloco ou um nome na lista para consultar limites e dimensões, focar ou isolar a região. A busca por nome/ID e as caixas de seleção filtram a cena. **Restaurar visualização** limpa a busca, o isolamento e as regiões ocultas e desliga o corte. Regiões com a mesma macroárea usam a mesma cor; sem macroárea, a cor permanece estável por ID. Arquivadas são cinza e só aparecem ao habilitar **Incluir arquivadas**. É possível ajustar a opacidade e ocultar os nomes; os nomes selecionados continuam visíveis.
 
 O **Corte horizontal por altura Z** exibe a parte de cada bloco abaixo da altura escolhida, permitindo examinar o interior. Os diagnósticos sempre consideram os volumes completos de todas as regiões ativas válidas, independentemente dos filtros. Sobreposições e contenções aparecem em uma lista com o volume de interseção; o volume compartilhado aparece em vermelho quando ambos os blocos estão visíveis. Contatos por face, aresta ou ponto aparecem em uma lista separada porque os limites inclusivos podem gerar ambiguidade para TAGs na fronteira. Clique no conflito para isolar e enquadrar o par.
 
@@ -68,6 +68,8 @@ Espaços vazios ajudam a revisar visualmente a cobertura, mas não comprovam uma
 ### Cadastro e conflitos
 
 Em **Regiões**, informe ID único, nome e os seis limites. Para cada eixo, mínimo < máximo. O ID deve ser válido para o Firestore: não vazio, sem `/`, com até 1500 bytes e sem nomes reservados. Documentos legados sem limites aparecem para edição e não participam da identificação espacial.
+
+O campo opcional **Macroárea (cor do 3D)** agrupa visualmente regiões, inclusive em elevações diferentes. Digite um nome novo ou escolha uma das sugestões existentes. Espaços extras e diferenças entre maiúsculas e minúsculas não mudam a cor. A macroárea afeta apenas a cor dos blocos e das amostras no mapa; identificação, limites, altura e `regionId` das TAGs continuam usando a região específica. Apagar o campo e salvar restaura a cor baseada no ID da região.
 
 A interface detecta sobreposição parcial, contenção total e contato de fronteira. Contatos por face, aresta ou ponto podem produzir ambiguidade porque os limites são inclusivos. Para salvar conflitos, é necessário marcar que os limites foram revisados. Qualquer alteração nos valores ou conflitos exige novo reconhecimento. A criação verifica IDs existentes em transação, inclusive os arquivados.
 
@@ -165,7 +167,7 @@ Documento novo `settings/globalDrawings`:
 
 Os parâmetros do ajuste são derivados dos pontos, evitando duas fontes de verdade. `rotation` segue o enum do EmbedPDF: 0, 1, 2, 3 para 0°, 90°, 180°, 270°.
 
-`regions/{id}` recebe `name,xMin,xMax,yMin,yMax,zMin,zMax,archived,updatedAt`. Os campos regionais antigos `plantPdf`, `sidePdf`, `plantCalibration` e `sideCalibration` são preservados por merge. As novas regiões não recebem PDFs individuais. TAGs mantêm o modelo existente; região efetiva e altura não são persistidas.
+`regions/{id}` recebe `name,macroArea,xMin,xMax,yMin,yMax,zMin,zMax,archived,updatedAt`. `macroArea` é opcional para documentos existentes e, quando vazia, mantém a cor baseada no ID. Os campos regionais antigos `plantPdf`, `sidePdf`, `plantCalibration` e `sideCalibration` são preservados por merge. As novas regiões não recebem PDFs individuais. TAGs mantêm o modelo existente; região efetiva e altura não são persistidas.
 
 Migração:
 

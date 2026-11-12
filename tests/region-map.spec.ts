@@ -1,6 +1,14 @@
 import { expect, test } from '@playwright/test';
 import type { Region } from '../src/types/domain';
-import { analyzeRegions, boundsSize, cutRegion, enclosingBounds } from '../src/utils/regionMap';
+import { resolveRegion } from '../src/utils/regions';
+import {
+  analyzeRegions,
+  boundsSize,
+  colorForRegion,
+  cutRegion,
+  enclosingBounds,
+  regionColor,
+} from '../src/utils/regionMap';
 
 const base: Region = {
   id: 'a',
@@ -62,6 +70,32 @@ test('corte respeita Z real sem alterar os limites usados no diagnóstico', () =
     zMax: 20,
   });
   expect(enclosingBounds([])).toBeNull();
+});
+
+test('macroárea define apenas a cor de regiões em elevações diferentes', () => {
+  const lower = { ...base, macroArea: '  Área   de Utilidades ' };
+  const upper = { ...base, id: 'upper', zMin: 20, zMax: 30, macroArea: 'área de utilidades' };
+  expect(colorForRegion(lower)).toBe(colorForRegion(upper));
+  expect(colorForRegion({ ...base, macroArea: '' })).toBe(regionColor(base.id));
+  expect(colorForRegion({ ...base, macroArea: undefined })).toBe(regionColor(base.id));
+  const volumes = analyzeRegions([lower, upper]).volumes;
+  expect(volumes.map((region) => region.id)).toEqual(['a', 'upper']);
+  expect(
+    resolveRegion(
+      {
+        id: 'tag',
+        tag: 'TAG',
+        description: '',
+        regionId: '',
+        x: -5,
+        y: 1005,
+        z: 25,
+        type: '',
+        status: 'active',
+      },
+      volumes,
+    ).region?.id,
+  ).toBe('upper');
 });
 
 test('mapa renderiza, gira, enquadra e seleciona regiões sem erros', async ({ page }) => {

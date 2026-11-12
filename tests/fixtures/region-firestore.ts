@@ -3,7 +3,7 @@ export * from 'firebase/firestore';
 import type { DocumentReference, DocumentData } from 'firebase/firestore';
 
 export const documents = new Map<string, DocumentData>([
-  ['regions/a', { name: 'Deck A', archived: false }],
+  ['regions/a', { name: 'Deck A', macroArea: 'Área inicial', archived: false }],
   ['tags/pump', { regionId: 'a' }],
 ]);
 export const writes: string[] = [];
@@ -20,6 +20,7 @@ export async function runTransaction(
     }>;
     delete: (reference: DocumentReference) => void;
     update: (reference: DocumentReference, data: DocumentData) => void;
+    set: (reference: DocumentReference, data: DocumentData, options?: { merge?: boolean }) => void;
   }) => Promise<void>,
 ) {
   if (failure) throw new Error(failure);
@@ -39,6 +40,15 @@ export async function runTransaction(
       pending.push(() => {
         writes.push(`update:${reference.path}`);
         documents.set(reference.path, { ...documents.get(reference.path), ...data });
+      });
+    },
+    set: (reference, data, options) => {
+      pending.push(() => {
+        writes.push(`set:${reference.path}`);
+        documents.set(reference.path, {
+          ...(options?.merge ? documents.get(reference.path) : {}),
+          ...data,
+        });
       });
     },
   });

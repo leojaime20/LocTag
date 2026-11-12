@@ -1,5 +1,6 @@
 import type { Region, RegionBounds, VolumeRegion } from '../types/domain';
 import { hasValidBounds, regionConflict } from './regions';
+import { macroAreaKey } from './macroArea';
 
 export type MappedRegion = Region & VolumeRegion;
 export type RegionMapView = 'iso' | 'top' | 'front' | 'side';
@@ -75,4 +76,9 @@ export function regionColor(id: string) {
   for (const char of id) hash = (hash * 31 + char.charCodeAt(0)) | 0;
   hash = Math.imul(hash ^ (hash >>> 16), 0x45d9f3b);
   return `hsl(${((hash % 360) + 360) % 360}, 58%, 48%)`;
+}
+
+export function colorForRegion(region: Pick<Region, 'id' | 'macroArea'>): string {
+  const group = macroAreaKey(region.macroArea);
+  return regionColor(group ? `macro:${group}` : region.id);
 }

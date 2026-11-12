@@ -1,4 +1,5 @@
 import type { Calibration, EquipmentTag, Region, RegionBounds, TagStatus } from './domain';
+import { normalizeMacroArea } from '../utils/macroArea';
 
 interface LegacyPoint {
   x?: number;
@@ -29,6 +30,7 @@ export interface RawTagDocument {
 export interface RawRegionDocument extends Partial<RegionBounds> {
   archived?: boolean;
   name?: string;
+  macroArea?: string;
   plantPdf?: string;
   sidePdf?: string;
   plantCalibration?: Partial<Calibration>;
@@ -75,6 +77,7 @@ export function normalizeRegion(id: string, data: RawRegionDocument): Region {
   return {
     id,
     name: data.name ?? fallbackRegion.name,
+    macroArea: normalizeMacroArea(data.macroArea),
     archived: data.archived,
     xMin: data.xMin,
     xMax: data.xMax,

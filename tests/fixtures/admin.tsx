@@ -16,6 +16,7 @@ const regions: Region[] = [
   {
     id: 'a',
     name: 'Deck A',
+    macroArea: 'Área inicial',
     xMin: 0,
     xMax: 10,
     yMin: 0,

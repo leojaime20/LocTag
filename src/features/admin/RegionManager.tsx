@@ -4,10 +4,12 @@ import type { Region, VolumeRegion } from '../../types/domain';
 import { LEGACY_PROJECT_ID } from '../../services/api/projects';
 import { archiveRegion, deleteRegion, saveVolumeRegion } from '../../services/api/drawings';
 import { hasValidBounds, regionConflict } from '../../utils/regions';
+import { macroAreaKey } from '../../utils/macroArea';
 import { NumberField } from './GlobalDrawingManager';
 const empty: VolumeRegion = {
   id: '',
   name: '',
+  macroArea: '',
   xMin: NaN,
   xMax: NaN,
   yMin: NaN,
@@ -28,6 +30,13 @@ export function RegionManager({
   const [filter, setFilter] = useState(''),
     [acknowledged, setAcknowledged] = useState(''),
     [deleting, setDeleting] = useState<{ id: string; permanent: boolean } | null>(null);
+  const macroAreas = Array.from(
+    new Map(
+      regions
+        .filter((region) => region.macroArea?.trim())
+        .map((region) => [macroAreaKey(region.macroArea), region.macroArea!.trim()]),
+    ).values(),
+  ).sort((a, b) => a.localeCompare(b, 'pt-BR'));
   const conflicts = hasValidBounds(form)
     ? regions
         .filter((r) => !r.archived && r.id !== form.id && hasValidBounds(r))
@@ -91,6 +100,23 @@ export function RegionManager({
         <label className="field">
           Nome da região
           <input value={form.name} onChange={(e) => update({ name: e.target.value })} />
+        </label>
+        <label className="field">
+          Macroárea (cor do 3D)
+          <input
+            list="region-macro-areas"
+            value={form.macroArea ?? ''}
+            onChange={(e) => update({ macroArea: e.target.value })}
+            placeholder="Ex.: Área de utilidades"
+          />
+          <datalist id="region-macro-areas">
+            {macroAreas.map((name) => (
+              <option key={name} value={name} />
+            ))}
+          </datalist>
+          <span className="text-xs text-slate-500">
+            Regiões com a mesma macroárea recebem a mesma cor. A localização continua pela região.
+          </span>
         </label>
         {(['x', 'y', 'z'] as const).flatMap((axis) =>
           (['Min', 'Max'] as const).map((bound) => (
@@ -182,6 +208,9 @@ export function RegionManager({
                       ? `X: ${r.xMin} a ${r.xMax} m • Y: ${r.yMin} a ${r.yMax} m • Z: ${r.zMin} a ${r.zMax} m`
                       : 'Região legada — limites não cadastrados'}
                   </p>
+                  {r.macroArea && (
+                    <p className="text-sm text-slate-600">Macroárea: {r.macroArea}</p>
+                  )}
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <button
@@ -191,6 +220,7 @@ export function RegionManager({
                       setForm({
                         id: r.id,
                         name: r.name,
+                        macroArea: r.macroArea ?? '',
                         xMin: r.xMin ?? NaN,
                         xMax: r.xMax ?? NaN,
                         yMin: r.yMin ?? NaN,

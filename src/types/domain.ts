@@ -30,6 +30,7 @@ export interface RegionBounds {
 export interface Region extends Partial<RegionBounds> {
   id: string;
   name: string;
+  macroArea?: string;
   archived?: boolean;
   plantPdf: string;
   sidePdf: string;
@@ -39,6 +40,7 @@ export interface Region extends Partial<RegionBounds> {
 export interface VolumeRegion extends RegionBounds {
   id: string;
   name: string;
+  macroArea?: string;
 }
 export interface Drawing {
   path: string;

@@ -6,7 +6,7 @@ import {
   boundsSize,
   cutRegion,
   enclosingBounds,
-  regionColor,
+  colorForRegion,
   type MappedRegion,
   type RegionMapConflict,
   type RegionMapView,
@@ -332,7 +332,7 @@ export default function RegionMapPanel({ regions }: { regions: Region[] }) {
                 />
                 <span
                   className="region-map-swatch"
-                  style={{ background: region.archived ? '#88978e' : regionColor(region.id) }}
+                  style={{ background: region.archived ? '#88978e' : colorForRegion(region) }}
                 />
                 <button
                   className="min-w-0 flex-1 py-2 text-left"
